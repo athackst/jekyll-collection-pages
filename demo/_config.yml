@@ -1,0 +1,89 @@
+theme: jekyll-theme-profile
+style: topbar
+title: Jekyll Collection Pages plugin
+repository: athackst/jekyll-collection-pages
+author: Allison Thackston
+description: "A plugin for creating index pages for a collection."
+image: /assets/img/jekyll-collection-pages-preview.png
+
+#profile info
+repo_info: false
+user_metadata: false
+user_image: /assets/img/jekyll-collection-pages.png
+profile_link: false
+
+social_media:
+  linkedin: allisonthackston
+  x: althack
+  github: athackst
+
+twitter:
+  username: althack
+  card: summary_large_image
+
+analytics:
+  provider: google
+  property: G-Y6XF7V2K0V
+
+collections:
+  docs:
+    output: true
+    sort_by: order
+  articles:
+    output: true
+
+defaults:
+  - scope:
+      path: "" # an empty string here means all files in the project
+      type: "articles"
+    values:
+      layout: "post"
+      image: /assets/img/default.png # The default image used for social and posts.
+      permalink: /articles/:path:output_ext
+  - scope:
+      path: "" # an empty string here means all files in the project
+      type: "docs"
+    values:
+      layout: "docs"
+      image: /assets/img/default.png # The default image used for social and posts.
+      permalink: /docs/:path:output_ext
+      toc: true
+
+links:
+  - name: Docs
+    url: /docs
+    thumbnail: /assets/img/docs.png
+  - name: Articles
+    url: /articles
+    thumbnail: /assets/img/articles.png
+
+collection_pages:
+  - collection: docs
+    field: category
+    path: docs/category
+    layout: category_layout.html
+    paginate: 6
+  - collection: articles
+    field: tags
+    path: tags
+    layout: tags.html
+    paginate: 10
+
+####################
+# jekyll-paginate settings
+paginate: 6 # The number of posts to show per page of pagination of blog posts
+paginate_path: "/blog/page:num"
+
+###################
+# Theme tag settings related
+tag_page_dir: tags
+related_by: "tags or categories"
+
+plugins:
+  - jekyll-collection-pages
+  - jekyll-github-metadata
+  - jekyll-octicons
+  - jekyll-relative-links
+  - jekyll-seo-tag
+  - jekyll-toc
+  - jemoji

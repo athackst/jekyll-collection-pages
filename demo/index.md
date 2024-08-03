@@ -21,8 +21,8 @@ Jekyll Collection Pages is a powerful plugin that enhances Jekyll's built-in col
 
 ### 📚 Documentation
 See how Jekyll Collection Pages organizes technical documentation:
-- [Browse Documentation](/docs/)
-- [View Documentation Categories](/docs/categories/)
+- [Browse Documentation](docs.md)
+- [View Documentation Categories](category.md)
 
 ### 📝 Articles
 Explore our blog-style content organization:

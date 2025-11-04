@@ -10,9 +10,9 @@ tags: [jekyll, plugins, tagging, categories, collections]
 
 When it comes to organizing content in Jekyll, several plugins offer solutions for handling tags and categories. In this article, we'll compare three popular options: `jekyll-collection-pages`, `jekyll-tagging`, and `jekyll-category-pages`. We'll explore their features, use cases, and help you decide which might be the best fit for your project.
 
-## Jekyll Collection Pages
+## jekyll-collection-pages
 
-Jekyll Collection Pages is a versatile plugin that generates pages for tags or categories across multiple collections.
+`jekyll-collection-pages` is a versatile plugin that generates pages for tags or categories across multiple collections.
 
 ### Key Features:
 - Works with any Jekyll collection, not just posts
@@ -52,7 +52,7 @@ Suited for sites that primarily use categories for organization and want dedicat
 
 ## Comparison
 
-| Feature | Jekyll Collection Pages | jekyll-tagging | jekyll-category-pages |
+| Feature | jekyll-collection-pages | jekyll-tagging | jekyll-category-pages |
 |---------|-------------------------|----------------|------------------------|
 | Works with all collections | ✅ | ❌ (posts only) | ❌ (posts only) |
 | Tag support | ✅ | ✅ | ❌ |
@@ -64,7 +64,7 @@ Suited for sites that primarily use categories for organization and want dedicat
 
 ## When to Choose Each Plugin
 
-1. **Choose Jekyll Collection Pages if:**
+1. **Choose jekyll-collection-pages if:**
    - You have multiple collections and want consistent tag/category pages across all of them
    - You need flexibility in handling both tags and categories
    - You want built-in pagination support

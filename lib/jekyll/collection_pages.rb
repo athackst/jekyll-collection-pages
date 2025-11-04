@@ -34,12 +34,23 @@ module Jekyll
 
         tag_layout_path = File.join('_layouts/', tag_layout)
 
+        site.data['collection_pages'] ||= {}
+
         Jekyll.logger.debug('CollectionPages:', "Generating pages for collection: #{collection_name}")
-        if per_page
-          generate_paginated_tags(site, tag_base_path, tag_layout_path, collection_name, tag_field, per_page)
-        else
-          generate_tags(site, tag_base_path, tag_layout_path, collection_name, tag_field)
-        end
+        documents_map, metadata_map = if per_page
+                                        generate_paginated_tags(site, tag_base_path, tag_layout_path, collection_name, tag_field, per_page)
+                                      else
+                                        generate_tags(site, tag_base_path, tag_layout_path, collection_name, tag_field)
+                                      end
+
+        collection_registry = site.data['collection_pages'][collection_name] ||= {}
+        collection_registry[tag_field] = {
+          'field' => tag_field,
+          'path' => tag_base_path,
+          'permalink' => "#{tag_base_path}/:#{tag_field}",
+          'labels' => metadata_map,
+          'pages' => documents_map
+        }
       end
 
       def sorted_tags(site, collection_name, tag_field)
@@ -64,6 +75,9 @@ module Jekyll
       def generate_paginated_tags(site, tag_base_path, tag_layout, collection_name, tag_field, per_page)
         tags = sorted_tags(site, collection_name, tag_field)
 
+        documents_map = {}
+        metadata_map = {}
+
         tags.each do |tag|
           posts_with_tag = site.collections[collection_name].docs.select do |doc|
             doc_tags = doc.data[tag_field]
@@ -72,18 +86,35 @@ module Jekyll
           tag_path = File.join(tag_base_path, Utils.slugify(tag))
 
           page_count = TagPager.calculate_pages(posts_with_tag, per_page)
+          tag_pages = []
           (1..page_count).each do |page_num|
-            site.pages << TagIndexPage.new(site, tag_path, page_num, tag, tag_layout, posts_with_tag, true, per_page)
+            tag_page = TagIndexPage.new(site, tag_path, page_num, tag, tag_layout, posts_with_tag, true, per_page)
+            site.pages << tag_page
+            tag_pages << tag_page
           end
+
+          documents_map[tag] = posts_with_tag
+          metadata_map[tag] = {
+            'pages' => tag_pages,
+            'page' => tag_pages.first,
+            'path' => tag_path,
+            'layout' => File.basename(tag_layout, '.*'),
+            'paginate' => per_page
+          }
         end
 
         Jekyll.logger.info('CollectionPages:',
                            "Generated #{tags.size} paginated index pages for collection '#{collection_name}' with field '#{tag_field}'")
         Jekyll.logger.debug('CollectionPages:', "Pages made for: #{tags.inspect}")
+
+        [documents_map, metadata_map]
       end
 
       def generate_tags(site, tag_base_path, tag_layout, collection_name, tag_field)
         tags = sorted_tags(site, collection_name, tag_field)
+
+        documents_map = {}
+        metadata_map = {}
 
         tags.each do |tag|
           posts_with_tag = site.collections[collection_name].docs.select do |doc|
@@ -91,11 +122,22 @@ module Jekyll
             doc_tags && (doc_tags.is_a?(String) ? doc_tags == tag : doc_tags.include?(tag))
           end
           tag_path = File.join(tag_base_path, Utils.slugify(tag))
-          site.pages << TagIndexPage.new(site, tag_path, 1, tag, tag_layout, posts_with_tag, false, nil)
+          tag_page = TagIndexPage.new(site, tag_path, 1, tag, tag_layout, posts_with_tag, false, nil)
+          site.pages << tag_page
+          documents_map[tag] = posts_with_tag
+          metadata_map[tag] = {
+            'pages' => [tag_page],
+            'page' => tag_page,
+            'path' => tag_path,
+            'layout' => File.basename(tag_layout, '.*'),
+            'paginate' => nil
+          }
         end
 
         Jekyll.logger.info('CollectionPages:', "Generated #{tags.size} index pages for collection '#{collection_name}'")
         Jekyll.logger.debug('CollectionPages:', "Pages made for: #{tags.inspect}")
+
+        [documents_map, metadata_map]
       end
     end
   end

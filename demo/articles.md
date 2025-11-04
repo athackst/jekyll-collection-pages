@@ -2,6 +2,7 @@
 title: Articles
 layout: page
 style: topbar
+permalink: /articles/
 ---
 <h1>Articles</h1>
 

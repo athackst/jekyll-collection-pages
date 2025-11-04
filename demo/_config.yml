@@ -60,12 +60,12 @@ links:
 collection_pages:
   - collection: docs
     field: category
-    path: docs/category
-    layout: category_layout.html
+    path: /docs
+    layout: collection_layout.html
     paginate: 6
   - collection: articles
     field: tags
-    path: tags
+    path: /tags
     layout: tags.html
     paginate: 10
 
@@ -79,7 +79,14 @@ paginate_path: "/blog/page:num"
 tag_page_dir: tags
 related_by: "tags or categories"
 
+###################
+# jekyll-relative-links settings
+relative_links:
+  enabled:     true
+  collections: true
+
 plugins:
+  - jekyll-paginate
   - jekyll-collection-pages
   - jekyll-github-metadata
   - jekyll-octicons

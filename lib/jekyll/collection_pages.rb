@@ -65,10 +65,10 @@ module Jekyll
         tags = sorted_tags(site, collection_name, tag_field)
 
         tags.each do |tag|
-          posts_with_tag = site.collections[collection_name].docs.select { |doc|
+          posts_with_tag = site.collections[collection_name].docs.select do |doc|
             doc_tags = doc.data[tag_field]
             doc_tags && (doc_tags.is_a?(String) ? doc_tags == tag : doc_tags.include?(tag))
-          }
+          end
           tag_path = File.join(tag_base_path, Utils.slugify(tag))
 
           page_count = TagPager.calculate_pages(posts_with_tag, per_page)
@@ -77,7 +77,8 @@ module Jekyll
           end
         end
 
-        Jekyll.logger.info('CollectionPages:', "Generated #{tags.size} paginated index pages for collection '#{collection_name}' with field '#{tag_field}'")
+        Jekyll.logger.info('CollectionPages:',
+                           "Generated #{tags.size} paginated index pages for collection '#{collection_name}' with field '#{tag_field}'")
         Jekyll.logger.debug('CollectionPages:', "Pages made for: #{tags.inspect}")
       end
 
@@ -85,10 +86,10 @@ module Jekyll
         tags = sorted_tags(site, collection_name, tag_field)
 
         tags.each do |tag|
-          posts_with_tag = site.collections[collection_name].docs.select { |doc|
+          posts_with_tag = site.collections[collection_name].docs.select do |doc|
             doc_tags = doc.data[tag_field]
             doc_tags && (doc_tags.is_a?(String) ? doc_tags == tag : doc_tags.include?(tag))
-          }
+          end
           tag_path = File.join(tag_base_path, Utils.slugify(tag))
           site.pages << TagIndexPage.new(site, tag_path, 1, tag, tag_layout, posts_with_tag, false, nil)
         end
@@ -104,7 +105,7 @@ module Jekyll
       @site = site
       @base = site.source
       if !File.exist?(File.join(@base, tag_layout)) &&
-         (site.theme && File.exist?(File.join(site.theme.root, tag_layout)))
+         site.theme && File.exist?(File.join(site.theme.root, tag_layout))
         @base = site.theme.root
       end
 
@@ -127,7 +128,6 @@ module Jekyll
       paginator = TagPager.new(page_num, per_page, posts_with_tag)
       paginator.set_previous_next(total_pages)
       data['paginator'] = paginator
-
     end
   end
 

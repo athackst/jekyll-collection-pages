@@ -168,7 +168,7 @@ module Jekyll
 
       total_pages = TagPager.calculate_pages(posts_with_tag, per_page)
       paginator = TagPager.new(page_num, per_page, posts_with_tag)
-      paginator.set_previous_next(total_pages)
+      paginator.update_navigation(total_pages)
       data['paginator'] = paginator
     end
   end
@@ -177,42 +177,65 @@ module Jekyll
     attr_reader :page, :per_page, :posts, :total_posts, :total_pages,
                 :previous_page, :previous_page_path, :next_page, :next_page_path
 
+    LIQUID_MAP = {
+      'page' => :page,
+      'per_page' => :per_page,
+      'posts' => :posts,
+      'total_posts' => :total_posts,
+      'total_pages' => :total_pages,
+      'previous_page' => :previous_page,
+      'previous_page_path' => :previous_page_path,
+      'next_page' => :next_page,
+      'next_page_path' => :next_page_path
+    }.freeze
+
     def self.calculate_pages(all_posts, per_page)
-      (all_posts.size.to_f / per_page.to_i).ceil
+      per_page_value = per_page.to_i
+      return 0 if per_page_value <= 0
+
+      (all_posts.size.to_f / per_page_value).ceil
     end
 
     def initialize(page, per_page, all_posts)
       @page = page
-      @per_page = per_page
+      @per_page = per_page.to_i
       @total_posts = all_posts.size
-      @total_pages = self.class.calculate_pages(all_posts, per_page)
-
-      init = (page - 1) * per_page
-      offset = [init + per_page - 1, total_posts - 1].min
-      @posts = all_posts[init..offset]
+      @total_pages = self.class.calculate_pages(all_posts, @per_page)
+      @posts = slice_posts(all_posts)
     end
 
-    def set_previous_next(total_pages)
-      @previous_page = @page > 1 ? @page - 1 : nil
-      @next_page = @page < total_pages ? @page + 1 : nil
-      @previous_page_path = if @previous_page
-                              @previous_page == 1 ? 'index.html' : "page#{@previous_page}.html"
-                            end
-      @next_page_path = @next_page ? "page#{@next_page}.html" : nil
+    def update_navigation(total_pages = @total_pages)
+      @previous_page = previous_page_number
+      @next_page = next_page_number(total_pages)
+      @previous_page_path = page_path(@previous_page)
+      @next_page_path = page_path(@next_page)
     end
 
     def to_liquid
-      {
-        'page' => @page,
-        'per_page' => @per_page,
-        'posts' => @posts,
-        'total_posts' => @total_posts,
-        'total_pages' => @total_pages,
-        'previous_page' => @previous_page,
-        'previous_page_path' => @previous_page_path,
-        'next_page' => @next_page,
-        'next_page_path' => @next_page_path
-      }
+      LIQUID_MAP.transform_values { |reader| public_send(reader) }
+    end
+
+    private
+
+    def slice_posts(all_posts)
+      return [] if @per_page <= 0
+
+      start_index = (@page - 1) * @per_page
+      all_posts.slice(start_index, @per_page) || []
+    end
+
+    def previous_page_number
+      @page > 1 ? @page - 1 : nil
+    end
+
+    def next_page_number(total_pages)
+      @page < total_pages ? @page + 1 : nil
+    end
+
+    def page_path(target_page)
+      return unless target_page
+
+      target_page == 1 ? CollectionPages::INDEXFILE : "page#{target_page}.html"
     end
   end
 end

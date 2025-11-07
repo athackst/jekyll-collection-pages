@@ -120,27 +120,77 @@ describe Jekyll::TagIndexPage do
 end
 
 describe Jekyll::TagPager do
-  let(:posts) { (1..20).map { |i| double("Post#{i}") } }
-  let(:per_page) { 6 }
+  describe '.calculate_pages' do
+    let(:posts) { Array.new(10) }
 
-  subject { described_class.new(2, per_page, posts) }
+    it 'returns total page count for a positive per_page' do
+      expect(described_class.calculate_pages(posts, 4)).to eq(3)
+    end
 
-  it 'calculates pages correctly' do
-    expect(described_class.calculate_pages(posts, per_page)).to eq(4)
+    it 'returns zero when per_page is zero or less' do
+      expect(described_class.calculate_pages(posts, 0)).to eq(0)
+      expect(described_class.calculate_pages(posts, -2)).to eq(0)
+    end
   end
 
-  it 'initializes with correct values' do
-    expect(subject.page).to eq(2)
-    expect(subject.per_page).to eq(per_page)
-    expect(subject.total_posts).to eq(posts.size)
-    expect(subject.posts.size).to eq(per_page)
+  describe '#initialize' do
+    let(:posts) { (1..20).map { |i| double("Post#{i}") } }
+    let(:per_page) { 6 }
+    subject(:pager) { described_class.new(2, per_page, posts) }
+
+    it 'normalizes per_page and computes totals' do
+      expect(pager.page).to eq(2)
+      expect(pager.per_page).to eq(per_page)
+      expect(pager.total_posts).to eq(posts.size)
+      expect(pager.total_pages).to eq(4)
+    end
+
+    it 'slices the posts for the current page' do
+      expect(pager.posts).to eq(posts.slice(6, per_page))
+    end
   end
 
-  it 'sets previous and next pages correctly' do
-    subject.set_previous_next(4)
-    expect(subject.previous_page).to eq(1)
-    expect(subject.next_page).to eq(3)
-    expect(subject.previous_page_path).to eq('index.html')
-    expect(subject.next_page_path).to eq('page3.html')
+  describe '#update_navigation' do
+    let(:posts) { (1..20).map { |i| double("Post#{i}") } }
+    let(:per_page) { 6 }
+
+    it 'defaults to the calculated total pages' do
+      pager = described_class.new(1, per_page, posts)
+      pager.update_navigation
+
+      expect(pager.previous_page).to be_nil
+      expect(pager.previous_page_path).to be_nil
+      expect(pager.next_page).to eq(2)
+      expect(pager.next_page_path).to eq('page2.html')
+    end
+
+    it 'allows overriding total pages' do
+      pager = described_class.new(3, per_page, posts)
+      pager.update_navigation(10)
+
+      expect(pager.previous_page).to eq(2)
+      expect(pager.previous_page_path).to eq('page2.html')
+      expect(pager.next_page).to eq(4)
+      expect(pager.next_page_path).to eq('page4.html')
+    end
+  end
+
+  describe '#to_liquid' do
+    let(:posts) { (1..20).map { |i| double("Post#{i}") } }
+    let(:per_page) { 6 }
+
+    it 'exposes the paginator attributes as a hash' do
+      pager = described_class.new(1, per_page, posts)
+      pager.update_navigation
+
+      expect(pager.to_liquid).to include(
+        'page' => 1,
+        'per_page' => per_page,
+        'total_posts' => posts.size,
+        'total_pages' => 4,
+        'next_page' => 2,
+        'next_page_path' => 'page2.html'
+      )
+    end
   end
 end

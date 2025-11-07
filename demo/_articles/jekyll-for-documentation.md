@@ -8,7 +8,7 @@ tags: [jekyll, documentation, collections]
 
 In the realm of technical documentation, content is king—but structure is the kingdom. A well-organized documentation site can make the difference between a frustrating user experience and an enlightening one. When users can easily find what they're looking for, whether through intuitive navigation or efficient search, they're more likely to engage with and benefit from your documentation.
 
-Jekyll, with its flexibility and power, has long been a favorite tool for creating documentation sites. But when it comes to organizing complex documentation structures, especially those with multiple sections, nested categories, and interrelated content, even Jekyll can use a boost. This is where the Jekyll Collection Pages plugin shines, offering enhanced capabilities for structuring and organizing your content.
+Jekyll, with its flexibility and power, has long been a favorite tool for creating documentation sites. But when it comes to organizing complex documentation structures, especially those with multiple sections, nested categories, and interrelated content, even Jekyll can use a boost. This is where the `jekyll-collection-pages` plugin shines, offering enhanced capabilities for structuring and organizing your content.
 
 ## Structuring Your Documentation Site
 
@@ -105,10 +105,10 @@ category: Setup
 
 # Installation Guide
 
-Here's how to install our software...
+Here's how to install the software...
 ```
 
-The Jekyll Collection Pages plugin will automatically create a category page at `/docs/getting-started/categories/setup.html` listing all documents in the "Setup" category.
+The `jekyll-collection-pages` plugin will automatically create a category page at `/docs/getting-started/categories/setup.html` listing all documents in the "Setup" category.
 
 ## Implementing Effective Search
 
@@ -247,7 +247,7 @@ Create `search.js` in your JavaScript directory:
 {% endraw %}
 ```
 
-## Leveraging Jekyll Collection Pages for Organization
+## Leveraging jekyll-collection-pages for an Organization
 
 The Jekyll Collection Pages plugin really shines when it comes to organizing your content. Let's explore some advanced uses.
 

@@ -21,6 +21,25 @@ describe Jekyll::CollectionPages::TagPagination do
       generator.generate(site)
       expect(site.pages).not_to be_empty
       expect(site.pages.first).to be_a(Jekyll::TagIndexPage)
+      collection_data = site.data['collection_pages']
+      expect(collection_data).to include('docs')
+      field_info = collection_data['docs']['category']
+      field_map = field_info['pages']
+      expect(field_map.keys).to include('Getting Started', 'Reference', 'Usage')
+      field_map.each_value do |documents|
+        expect(documents).not_to be_empty
+        expect(documents.all? { |doc| doc.is_a?(Jekyll::Document) }).to be true
+      end
+      expect(field_info['field']).to eq('category')
+      expect(field_info['path']).to eq('docs/category')
+      expect(field_info['permalink']).to eq('docs/category/:category')
+      labels = field_info['labels']
+      expect(labels.keys).to include('Getting Started', 'Reference', 'Usage')
+      labels.each_value do |entry|
+        expect(entry['pages']).not_to be_empty
+        expect(entry['page']).to be_a(Jekyll::TagIndexPage)
+        expect(entry['path']).not_to be_empty
+      end
     end
   end
 
@@ -49,6 +68,27 @@ describe Jekyll::CollectionPages::TagPagination do
       expect(site.pages).not_to be_empty
       expect(site.pages.count).to be > 1
       expect(site.pages.all? { |page| page.is_a?(Jekyll::TagIndexPage) }).to be true
+      collection_data = site.data['collection_pages']
+      expect(collection_data.keys).to include('docs', 'articles')
+      docs_info = collection_data['docs']['category']
+      articles_info = collection_data['articles']['tags']
+      expect(docs_info).not_to be_nil
+      expect(articles_info).not_to be_nil
+
+      docs_field_map = docs_info['pages']
+      articles_field_map = articles_info['pages']
+      expect(docs_field_map.values.flatten).not_to be_empty
+      expect(articles_field_map.values.flatten).not_to be_empty
+
+      expect(docs_info['field']).to eq('category')
+      expect(docs_info['path']).to eq('docs/category')
+      expect(docs_info['permalink']).to eq('docs/category/:category')
+      expect(articles_info['field']).to eq('tags')
+      expect(articles_info['path']).to eq('articles/tags')
+      expect(articles_info['permalink']).to eq('articles/tags/:tags')
+
+      expect(docs_info['labels'].values.flat_map { |entry| entry['pages'] }).not_to be_empty
+      expect(articles_info['labels'].values.flat_map { |entry| entry['pages'] }).not_to be_empty
     end
   end
 end

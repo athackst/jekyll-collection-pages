@@ -1,29 +1,54 @@
 ---
 title: "Quick start"
 category: "Getting Started"
-order: 1
+description: "Install the plugin, configure your first collection, and explore the generated pages."
+order: 2
 ---
 
-## Usage
+`jekyll-collection-pages` adds automated index pages, layout selection, and optional pagination for any Jekyll collection. In a few minutes you can stand up front-matter key based landing pages like "tags" or "categories" that stay in sync with your content.
 
-### Installation
+## Install the plugin
 
-Add this line to your Jekyll site's `Gemfile`:
+1. Add the gem to your site’s `Gemfile`:
 
-```ruby
-gem 'jekyll-collection-pages'
-```
+    ```ruby
+    gem 'jekyll-collection-pages'
+    ```
 
-And add this line to your Jekyll site's `_config.yml`:
+2. Enable the plugin in `_config.yml`:
+
+    ```yaml
+    plugins:
+      - jekyll-collection-pages
+    ```
+
+3. Ensure the collections you plan to index have `output: true` so the generated pages can link to the documents.
+
+## Configure your first collection
+
+Add a `collection_pages` entry for each collection/field combination you want to index:
 
 ```yaml
-plugins:
-  - jekyll-collection-pages
+collections:
+  docs:
+    output: true
+
+collection_pages:
+  - collection: docs
+    field: category
+    path: docs/category
+    layout: category_layout.html
+    paginate: 6
 ```
 
-### Basic Configuration
+Key options:
+- `collection`: collection label (matches `collections` config).
+- `field`: front-matter key to group documents (string or list values).
+- `path`: base folder for generated pages (relative to site root).
+- `layout`: layout in `_layouts/` (defaults to `collection_layout.html`).
+- `paginate`: optional integer for per-page pagination.
 
-In your `_config.yml`, add the following configuration for each collection you want to generate pages for:
+You can declare multiple entries—single collection with many fields, or multiple collections:
 
 ```yaml
 collection_pages:
@@ -39,94 +64,67 @@ collection_pages:
     paginate: 10
 ```
 
-### Configuration Options
+## Build and explore
 
-- `collection`: The name of the collection to generate pages for.
-- `field`: The front matter field to use for categorization (e.g., 'category', 'tags').
-- `path`: The output path for the generated pages.
-- `layout`: The layout to use for the generated pages.
-- `paginate`: (Optional) The number of items per page. If omitted, all items will be on a single page.
+Run `bundle exec jekyll serve` and visit the generated paths, e.g. `/docs/category/getting-started/`. The plugin injects these variables into layouts:
 
-### Example Usage
+- `page.tag`: value of the current field.
+- `page.posts`: documents in that field bucket.
+- `page.paginator`: pagination data when `paginate` is set (same shape as Jekyll paginator).
 
-1. **Setting up collections**
-
-   In your `_config.yml`:
-
-   ```yaml
-   collections:
-     docs:
-       output: true
-   collection_pages:
-      collection: docs
-      field: category
-      path: docs/category
-      layout: category_layout.html
-      paginate: 6
-   ```
-
-2. **Creating collection items**
-
-   Create files in your collections with appropriate front matter:
-
-   `_docs/sample-doc.md`:
-   ```yaml
-   ---
-   title: "Sample Document"
-   category: "User Guide"
-   ---
-   This is a sample document.
-   ```
-
-   `_articles/sample-article.md`:
-   ```yaml
-   ---
-   title: "Sample Article"
-   tags: ["Jekyll", "Plugins"]
-   ---
-   This is a sample article.
-   ```
-
-3. **Creating layouts**
-
-   Create layout files for your generated pages:
-
-   `_layouts/category_layout.html`:
-   ```html
-   ---
-   layout: default
-   ---
-   <h1>Category: {{ page.tag }}</h1>
-   <ul>
-   {% for post in page.posts %}
-     <li><a href="{{ post.url }}">{{ post.title }}</a></li>
-   {% endfor %}
-   </ul>
-   ```
-
-4. **Accessing generated pages**
-
-   The plugin will generate pages at paths like:
-   - `/docs/category/user-guide.html`
-   - `/articles/tags/jekyll.html`
-   - `/articles/tags/plugins.html`
-
-### Pagination
-
-If you've set the `paginate` option, you can access pagination information in your layouts:
 
 ```html
-{% if paginator.total_pages > 1 %}
-  {% if paginator.previous_page %}
-    <a href="{{ paginator.previous_page_path }}">Previous</a>
-  {% endif %}
-  <span>Page {{ paginator.page }} of {{ paginator.total_pages }}</span>
-  {% if paginator.next_page %}
-    <a href="{{ paginator.next_page_path }}">Next</a>
-  {% endif %}
-{% endif %}
+{% raw %}
+---
+layout: default
+---
+<h1>{{ page.tag }}</h1>
+<ul>
+  {% for doc in page.posts %}
+    <li><a href="{{ doc.url | relative_url }}">{{ doc.data.title }}</a></li>
+  {% endfor %}
+</ul>
+{% endraw %}
 ```
 
-### Demo Site
+## Surface the generated data
 
-For more complex examples and a full working demo, check out the [demo site](https://www.althack.dev/jekyll-collection-pages) included in this repository.
+Every build populates a hash at `site.data.collection_pages[collection][field]` that contains:
+
+- `field`, `path`, and `permalink`: the configuration details
+- `pages`: documents grouped by label (same shape as `site.tags`)
+- `labels`: metadata describing the generated index pages
+
+Iterate through the documents for a field:
+
+```liquid
+{% raw %}
+{% assign docs_info = site.data.collection_pages.docs.category %}
+{% for entry in docs_info.pages %}
+  {% assign label = entry | first %}
+  {% assign documents = entry | last %}
+  <h2>{{ label }}</h2>
+  <p>{{ documents.size }} docs</p>
+{% endfor %}
+{% endraw %}
+```
+
+Pair the documents with their metadata when you need generated URLs or pagination helpers:
+
+```liquid
+{% raw %}
+{%- assign info = site.data.collection_pages.articles.tags %}
+
+{% for entry in info.pages %}
+  {% assign label = entry | first %}
+  {% assign documents = entry | last %}
+  {% assign meta = info.labels[label] %}
+  <h2> <a href="{{ meta.page.url | relative_url }}">{{ label }}</a> ({{ documents.size }})</h2>
+  <ul>
+  {% for entry in documents %}
+    <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
+  {% endfor %}
+  </ul>
+{% endfor %}
+{% endraw %}
+```

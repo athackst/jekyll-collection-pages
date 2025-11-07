@@ -12,7 +12,7 @@ Enter Jekyll, the static site generator that's been a staple for developers and 
 
 What I needed was a bridge between these two worlds - a way to harness Obsidian's note-taking prowess and Jekyll's publishing capabilities without compromising either. I wanted to write in Obsidian as I always have, with my preferred file names and organization, and then seamlessly publish select notes to my Jekyll site without any file juggling or renaming gymnastics.
 
-That's where this setup comes in. By leveraging Jekyll collections, smart use of symlinks, and the power of the Jekyll Collection Pages plugin, we can create a harmonious workflow that respects the Obsidian structure while unlocking Jekyll's publishing potential.
+That's where this setup comes in. By leveraging Jekyll collections, smart use of symlinks, and the power of the `jekyll-collection-pages` plugin, we can create a harmonious workflow that respects the Obsidian structure while unlocking Jekyll's publishing potential.
 
 
 ## Creating the Symlink

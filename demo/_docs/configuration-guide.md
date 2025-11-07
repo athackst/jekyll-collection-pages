@@ -1,85 +1,104 @@
 ---
 title: "Configuration guide"
-category: "Advanced Topics"
+category: "Reference"
+description: "Reference for every collection_pages option, defaults, and validation tips."
 order: 3
 ---
 
-This guide provides detailed information on how to configure the Jekyll Collection Pages plugin to suit youro needs
+This guide describes the configuration options available in `jekyll-collection-pages` and how they interact. Use it as the single reference while wiring the plugin into your site.
 
 ## Overview
 
-The Jekyll Collection Pages plugin is configured in your site's `_config.yml` file.  The basic structure of the configuration is as follows
+Add a `collection_pages` entry to `_config.yml`. Each entry targets one collection and one front-matter field:
 
 ```yaml
-
 collection_pages:
-    collection: docs
+  - collection: docs
     field: category
     path: docs/category
     layout: category_layout.html
     paginate: 6
 ```
 
-You can also configure multiple collections by using an array
-
+You can declare multiple collections or multiple fields for the same collection by adding more entries to the array:
 
 ```yaml
 collections:
-    docs:
+  docs:
     output: true
-    articles:
+  articles:
     output: true
+
 collection_pages:
-- collection: docs
+  - collection: docs
     field: category
     path: docs/category
     layout: category_layout.html
     paginate: 6
-- collection: articles
+  - collection: articles
     field: tags
     path: articles/tags
     layout: tags_layout.html
     paginate: 10
 ```
 
+If you only need a single entry, `collection_pages` can also be a hash (the plugin normalises it internally). The array form keeps things consistent once you add more targets.
+
 ## Configuration options
 
 ### `collection`
 
-- Type: string
-- Required: Yes
-- Description: The name of the collection to generate pages for.
-
-This should match the name of a collection defined in your Jekyll site configuration.
+- Type: `String`  
+- Required: ✔ 
+- Description: Collection label from your `collections` configuration.
 
 ### `field`
 
-- Type: String
-- Required: Yes
-- Description: The front matter field to use for generating pages
+- Type: `String`  
+- Required: ✔  
+- Description: Front-matter key used to group documents. Supports scalar values (e.g. `"category"`) and array values (e.g. `"tags"`).
 
-This field should exist in the front matter of your collection documents.  If using a field that can contain multiple values (like `tags`), the plugin will creat a page for each unique value.
+Make sure every document you expect to index sets this field. When the field holds an array, the plugin creates one page per value.
 
 ### `path`
 
-- Type: String
-- Required: Yes
-- Description: The output path for generated pages
-
-This determines where the generated pages will be placed in your site structure. The plugin will create subdirectories here for each unique field entry.
+- Type: `String`  
+- Required: ✔  
+- Description: Destination directory (relative to the site source). Each unique field value is rendered under this path, e.g. `docs/category/getting-started/index.html`.
 
 ### `layout`
 
-- Type: String
-- Required: No (default: collection_layout.html)
-- Description: The layout to use for the generated pages
+- Type: `String`  
+- Required: ✖ (default: `collection_layout.html`)  
+- Description: Layout file in `_layouts/` to render the generated page.
 
-This should be the name of a layout file in your `_layouts` directory.
+The plugin copies `page.posts`, `page.tag`, and optional `page.paginator` into the layout context.
 
 ### `paginate`
 
-- Type: Integer
-- Required: No (default: None)
-- Description: The number of items to display per page
+- Type: `Integer`  
+- Required: ✖  
+- Description: When present, splits the documents into pages of the given size. Pagination behaves like Jekyll’s built-in paginator (`page.paginator` contains `page`, `total_pages`, `previous_page_path`, etc.).
 
-If set, the plugin will create paginated pages.  If omitted, all items will be displayed on a single page.
+Omit this key for single-page listings.
+
+## Generated data
+
+At build time the plugin exports `site.data.collection_pages[collection_name][field]`, which contains:
+
+- `field`, `path`, `permalink` (`"#{path}/:#{field}"`)
+- `pages` → `{ label => [documents...] }` (same shape as `site.tags`)
+- `labels` → `{ label => { 'page', 'pages', 'path', 'layout', 'paginate' } }`
+
+Use `pages` to feed existing includes, and `labels[label].page.url` when you need the generated index URL.
+
+See the [Generated data reference](generated-data.md) for usage patterns and Liquid snippets.
+
+## Validation tips
+
+- Ensure the target collection has `output: true`, otherwise links from index pages may 404.
+- Double-check that the `field` exists in every document; documents missing the field are skipped.
+- Use `bundle exec jekyll build --trace` with `JEKYLL_LOG_LEVEL=debug` to see the plugin’s log output (e.g. total pages generated).
+- Inspect `site.data.collection_pages` in a rendered page (`{% raw %}{{ site.data.collection_pages | jsonify }}{% endraw %}`) when debugging Liquid loops.
+
+Ready to dive deeper? Explore the [examples](examples.md) for real-world configurations and the [layout recipes](layout-recipes.md) to customise the rendered pages.

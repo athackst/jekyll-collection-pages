@@ -15,9 +15,9 @@ RSpec.configure do |config|
 
   def make_site(options = {})
     site_config = Jekyll.configuration(options.merge({
-      "source"      => File.expand_path("./fixtures", __dir__),
-      "destination" => File.expand_path("./dest", __dir__)
-    }))
+                                                       'source' => File.expand_path('./fixtures', __dir__),
+                                                       'destination' => File.expand_path('./dest', __dir__)
+                                                     }))
     site = Jekyll::Site.new(site_config)
     site.read
     site

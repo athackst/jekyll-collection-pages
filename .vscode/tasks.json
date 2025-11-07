@@ -24,6 +24,19 @@
             }
         },
         {
+            "label": "lint",
+            "type": "shell",
+            "command": "bundle exec rubocop",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "format",
+            "type": "shell",
+            "command": "bundle exec rubocop -A",
+            "problemMatcher": []
+        },
+        {
             "label": "demo: build",
             "type": "shell",
             "command": "bundle exec jekyll build -s demo --verbose",

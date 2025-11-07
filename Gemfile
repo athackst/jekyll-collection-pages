@@ -17,8 +17,11 @@ group :jekyll_plugins do
 end
 
 group :development do
+  gem 'bundler'
   gem 'dotenv'
   gem 'html-proofer'
+  gem 'rake'
+  gem 'rspec'
   gem 'rubocop'
 end
 

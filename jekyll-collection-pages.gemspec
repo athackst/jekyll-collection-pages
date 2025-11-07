@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gem::Specification.new do |spec|
   spec.name          = 'jekyll-collection-pages'
   spec.version       = File.read(File.expand_path('VERSION', __dir__)).strip
@@ -7,6 +9,11 @@ Gem::Specification.new do |spec|
   spec.description   = 'This Jekyll plugin allows you to generate tag pages for multiple collections, with support for pagination.'
   spec.homepage      = 'https://github.com/athackst/jekyll-collection-pages'
   spec.license       = 'MIT'
+  spec.metadata       = {
+    'source_code_uri' => spec.homepage,
+    'bug_tracker_uri' => "#{spec.homepage}/issues",
+    'rubygems_mfa_required' => 'true'
+  }
   spec.required_ruby_version = Gem::Requirement.new('>= 2.7.0')
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do

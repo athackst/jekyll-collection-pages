@@ -51,7 +51,7 @@
         {
             "label": "gem: build",
             "type": "shell",
-            "command": ".github/build.sh",
+            "command": "gem build *.gemspec",
             "problemMatcher": []
         }
     ]

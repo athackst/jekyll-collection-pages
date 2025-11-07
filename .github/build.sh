@@ -1,4 +1,4 @@
 #!/bin/bash
 
 set -e
-gem build *.gemspec
+bundle exec jekyll build -s demo

@@ -6,7 +6,8 @@
         {
             "label": "bundle install",
             "type": "shell",
-            "command": "bundle install"
+            "command": "bundle install",
+            "problemMatcher": []
         },
         {
             "label": "bundle update",
@@ -20,22 +21,25 @@
             "group": {
                 "kind": "test",
                 "isDefault": true
-            },
+            }
         },
         {
             "label": "demo: build",
             "type": "shell",
-            "command": "bundle exec jekyll build -s demo --verbose"
+            "command": "bundle exec jekyll build -s demo --verbose",
+            "problemMatcher": []
         },
         {
             "label": "demo: serve",
             "type": "shell",
-            "command": "bundle exec jekyll serve -s demo --verbose --livereload"
+            "command": "bundle exec jekyll serve -s demo --verbose --livereload",
+            "problemMatcher": []
         },
         {
             "label": "gem: build",
             "type": "shell",
-            "command": ".github/build.sh"
-        },
+            "command": ".github/build.sh",
+            "problemMatcher": []
+        }
     ]
 }

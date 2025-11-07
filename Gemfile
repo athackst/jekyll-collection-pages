@@ -22,7 +22,11 @@ group :development do
   gem 'html-proofer'
   gem 'rake'
   gem 'rspec'
-  gem 'rubocop'
+  gem 'rubocop', require: false
+  gem 'rubocop-rake', require: false
+  gem 'rubocop-rspec', require: false
+  gem 'ruby-lsp'
+  gem 'ruby-lsp-rspec', require: false
 end
 
 # Required in Ruby 3.4+ when Jekyll < 4.4

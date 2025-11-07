@@ -1,4 +1,5 @@
 inherit_from: .rubocop_todo.yml
+
 AllCops:
   NewCops: enable
 
@@ -11,6 +12,10 @@ Layout/LineLength:
   Max: 150
   AllowedPatterns:
     - '\A# '   # allow long comment URLs/notes
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
 
 Style/Documentation:
   Enabled: false   # tiny gems / plugins rarely need top-level class docs

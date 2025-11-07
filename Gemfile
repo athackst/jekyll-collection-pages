@@ -3,7 +3,8 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'jekyll'
+gem 'jekyll', ENV['JEKYLL_VERSION'] if ENV['JEKYLL_VERSION']
+
 gem 'webrick', '~> 1.8'
 
 group :jekyll_plugins do
@@ -20,3 +21,12 @@ group :development do
   gem 'html-proofer'
   gem 'rubocop'
 end
+
+# Required in Ruby 3.4+ when Jekyll < 4.4
+gem 'base64'
+gem 'bigdecimal'
+gem 'csv'
+gem 'logger'
+
+# Required in Ruby 3.3.4 when Jekyll == 3.10
+gem 'kramdown-parser-gfm'

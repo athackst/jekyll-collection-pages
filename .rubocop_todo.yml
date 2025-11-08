@@ -10,16 +10,22 @@
 # Configuration parameters: AllowedMethods, AllowedPatterns, CountRepeatedAttributes.
 Metrics/AbcSize:
   Max: 32
+  Exclude:
+    - 'lib/jekyll/collection_pages.rb'
 
 # Offense count: 1
 # Configuration parameters: CountComments, CountAsOne.
 Metrics/ClassLength:
   Max: 111
+  Exclude:
+    - 'lib/jekyll/collection_pages.rb'
 
 # Offense count: 6
 # Configuration parameters: CountComments, CountAsOne, AllowedMethods, AllowedPatterns.
 Metrics/MethodLength:
   Max: 29
+  Exclude:
+    - 'lib/jekyll/collection_pages.rb'
 
 # Offense count: 2
 # Configuration parameters: CountKeywordArgs, MaxOptionalParameters.

@@ -95,26 +95,53 @@ end
 
 describe Jekyll::TagIndexPage do
   let(:site) { make_site }
-  let(:base_dir) { site.source }
-  let(:tag) { 'test_tag' }
   let(:layout) { '_layouts/tags.html' }
   let(:posts) { [] }
+  let(:attributes) do
+    {
+      dir: 'tag_dir',
+      page_number: 1,
+      tag: 'test_tag',
+      layout: layout,
+      posts: posts
+    }
+  end
 
   context 'without pagination' do
-    subject { described_class.new(site, 'tag_dir', 1, tag, layout, posts, false, nil) }
+    subject { described_class.new(site, attributes) }
 
     it 'initializes correctly' do
-      expect(subject.data['tag']).to eq(tag)
+      expect(subject.data['tag']).to eq(attributes[:tag])
       expect(subject.data['layout']).to eq(File.basename(layout, '.*'))
       expect(subject.data['posts']).to eq(posts)
+      expect(subject.data['paginator']).to be_nil
     end
   end
 
   context 'with pagination' do
-    subject { described_class.new(site, 'tag_dir', 1, tag, layout, posts, true, 6) }
+    let(:paginator) { Jekyll::TagPager.new(1, 1, posts) }
+    subject { described_class.new(site, attributes.merge(paginator: paginator)) }
 
     it 'initializes with paginator' do
       expect(subject.data['paginator']).to be_a(Jekyll::TagPager)
+      expect(subject.data['paginator']).to eq(paginator)
+    end
+  end
+
+  context 'with invalid attributes' do
+    it 'raises when required keys are missing' do
+      expect { described_class.new(site, attributes.except(:dir)) }
+        .to raise_error(ArgumentError, /Missing TagIndexPage attributes: dir/)
+    end
+
+    it 'raises when layout is blank' do
+      expect { described_class.new(site, attributes.merge(layout: '')) }
+        .to raise_error(ArgumentError, /layout must be a non-empty string/)
+    end
+
+    it 'raises when page number is not positive' do
+      expect { described_class.new(site, attributes.merge(page_number: 0)) }
+        .to raise_error(ArgumentError, /page_number must be a positive integer/)
     end
   end
 end

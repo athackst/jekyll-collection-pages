@@ -88,7 +88,9 @@ module Jekyll
           page_count = TagPager.calculate_pages(posts_with_tag, per_page)
           tag_pages = []
           (1..page_count).each do |page_num|
-            tag_page = TagIndexPage.new(site, tag_path, page_num, tag, tag_layout, posts_with_tag, true, per_page)
+            paginator = TagPager.new(page_num, per_page, posts_with_tag)
+            paginator.update_navigation(page_count)
+            tag_page = build_page(site, tag_path, page_num, tag, tag_layout, paginator.posts, paginator)
             site.pages << tag_page
             tag_pages << tag_page
           end
@@ -122,7 +124,7 @@ module Jekyll
             doc_tags && (doc_tags.is_a?(String) ? doc_tags == tag : doc_tags.include?(tag))
           end
           tag_path = File.join(tag_base_path, Utils.slugify(tag))
-          tag_page = TagIndexPage.new(site, tag_path, 1, tag, tag_layout, posts_with_tag, false, nil)
+          tag_page = build_page(site, tag_path, 1, tag, tag_layout, posts_with_tag)
           site.pages << tag_page
           documents_map[tag] = posts_with_tag
           metadata_map[tag] = {
@@ -139,37 +141,78 @@ module Jekyll
 
         [documents_map, metadata_map]
       end
+
+      def build_page(site, dir, page_number, tag, layout, posts, paginator = nil)
+        TagIndexPage.new(
+          site,
+          {
+            dir: dir,
+            page_number: page_number,
+            tag: tag,
+            layout: layout,
+            posts: posts,
+            paginator: paginator
+          }
+        )
+      end
     end
   end
 
   class TagIndexPage < Page
-    def initialize(site, dir, page_num, tag, tag_layout, posts_with_tag, use_paginator, per_page)
-      @site = site
-      @base = site.source
-      if !File.exist?(File.join(@base, tag_layout)) &&
-         site.theme && File.exist?(File.join(site.theme.root, tag_layout))
-        @base = site.theme.root
-      end
+    REQUIRED_KEYS = %i[dir page_number tag layout posts].freeze
 
-      super(site, @base, '', tag_layout)
-      @dir = dir
-      @name = page_num == 1 ? CollectionPages::INDEXFILE : "page#{page_num}.html"
+    def initialize(site, attributes)
+      validate_attributes!(attributes)
+      @site = site
+      @base = resolve_base(site, attributes[:layout])
+      super(site, @base, '', attributes[:layout])
+
+      @dir = attributes[:dir]
+      @name = page_name(attributes[:page_number])
 
       process(@name)
+      read_yaml(@base, attributes[:layout])
+      assign_metadata(attributes)
+    end
 
-      read_yaml(@base, tag_layout)
+    private
 
-      data['layout'] = File.basename(tag_layout, '.*')
-      data['tag'] = tag
-      data['title'] = tag.to_s
-      data['posts'] = posts_with_tag
+    def validate_attributes!(attributes)
+      missing = REQUIRED_KEYS.reject { |key| attributes.key?(key) }
+      raise ArgumentError, "Missing TagIndexPage attributes: #{missing.join(', ')}" if missing.any?
 
-      return unless use_paginator
+      raise ArgumentError, 'page_number must be a positive integer' unless attributes[:page_number].to_i.positive?
+      raise ArgumentError, 'layout must be a non-empty string' if attributes[:layout].to_s.empty?
+      raise ArgumentError, 'dir must be a non-empty string' if attributes[:dir].to_s.empty?
+      raise ArgumentError, 'posts must be an array-like object' unless attributes[:posts].respond_to?(:each)
+    end
 
-      total_pages = TagPager.calculate_pages(posts_with_tag, per_page)
-      paginator = TagPager.new(page_num, per_page, posts_with_tag)
-      paginator.update_navigation(total_pages)
-      data['paginator'] = paginator
+    def resolve_base(site, layout)
+      site_layout = File.join(site.source, layout)
+      return site.source if File.exist?(site_layout)
+
+      theme_layout = site.theme && File.join(site.theme.root, layout)
+      return site.theme.root if theme_layout && File.exist?(theme_layout)
+
+      site.source
+    end
+
+    def page_name(page_number)
+      page_number == 1 ? CollectionPages::INDEXFILE : "page#{page_number}.html"
+    end
+
+    def assign_metadata(attributes)
+      data.merge!(
+        'layout' => File.basename(attributes[:layout], '.*'),
+        'tag' => attributes[:tag],
+        'title' => attributes[:tag].to_s,
+        'posts' => attributes[:posts]
+      )
+      assign_paginator(attributes[:paginator])
+    end
+
+    def assign_paginator(paginator)
+      data['paginator'] = paginator if paginator
     end
   end
 

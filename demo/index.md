@@ -43,7 +43,7 @@ Ready to use `jekyll-collection-pages` in your own project?
 
 <div class="d-flex flex-wrap gutter-spacious">
 <!-- This loops through the articles -->
-{%- for post in site.articles | limit: 3 %}
+{%- for post in site.articles limit: 3 %}
   {%- if post.feature or post == site.posts[0] %}
   {%- include post-feature-card.html %}
   {%- else %}

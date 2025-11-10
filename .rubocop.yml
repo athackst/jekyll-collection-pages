@@ -3,19 +3,41 @@ inherit_from: .rubocop_todo.yml
 AllCops:
   NewCops: enable
 
+# Naming cops
+# ----------------------------------------
 Naming/FileName:
   Exclude:
     - lib/jekyll-collection-pages.rb   # gem entry point must match require name
     - lib/**/jekyll-collection-pages.rb
 
+# Layout cops
+# ----------------------------------------
 Layout/LineLength:
   Max: 150
   AllowedPatterns:
     - '\A# '   # allow long comment URLs/notes
 
+# Metrics cops
+# ----------------------------------------
+Metrics/AbcSize:
+  Max: 23
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
+Metrics/ClassLength:
+  Max: 240
+Metrics/CyclomaticComplexity:
+  Max: 11
+Metrics/MethodLength:
+  Max: 20
+Metrics/ModuleLength:
+  Max: 240
+Metrics/ParameterLists:
+  Max: 4
+Metrics/PerceivedComplexity:
+  Max: 13
 
+# Style cops
+# ----------------------------------------
 Style/Documentation:
   Enabled: false   # tiny gems / plugins rarely need top-level class docs

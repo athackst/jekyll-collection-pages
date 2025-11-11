@@ -1,11 +1,15 @@
 ---
-layout: docs
+layout: page
 ---
-<ul>
-  {% for post in page.posts %}
-    <li><a href="{{ post.url | relative_url }}">{{ post.title }}</a></li>
-  {% endfor %}
-</ul>
+<div class="d-flex flex-wrap gutter border-top">
+    {% for post in page.posts %}
+    {%- if post.feature or forloop.first %}
+    {%- include post-feature-card.html %}
+    {%- else %}
+    {%- include post-card.html border="border-top" %}
+    {%- endif %}
+    {% endfor %}
+</div>
 
 {% if page.paginator %}
 <!-- Pagination is active -->

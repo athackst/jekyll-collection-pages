@@ -29,8 +29,8 @@ Having trouble seeing generated pages or data? Start here.
 
 ## Pagination navigation broken
 
-- When using `paginate`, render pagination links with `page.paginator.previous_page_path` and `page.paginator.next_page_path`. These are relative to the generated page directory.
-- Verify the configured `paginate` value is an integer. Strings will be coerced but emit warnings.
+- When using `paginate`, render pagination links with `page.paginator.previous_page_path` and `page.paginator.next_page_path`. The plugin now emits paths that already include the generated tag/category directory (e.g. `docs/category/reference/`), so piping them through `relative_url` produces working absolute URLs.
+- Verify the configured `paginate` value is a positive integer. Non-numeric values raise an error and zero/negative values fall back to single-page generation.
 - To link back to the first page, use the page directory:
 
   ```liquid

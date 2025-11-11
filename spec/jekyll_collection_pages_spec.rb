@@ -92,6 +92,27 @@ describe Jekyll::CollectionPages::TagPagination do
     end
   end
 
+  context 'with path templates containing :field and :num' do
+    before do
+      site.config['collection_pages'] = {
+        'collection' => 'docs',
+        'field' => 'category',
+        'path' => 'docs/:field/page:num',
+        'layout' => 'category_layout.html',
+        'paginate' => 1
+      }
+    end
+
+    it 'creates nested directories for paginated pages' do
+      generator.generate(site)
+      reference_pages = site.pages.select { |page| page.data['tag'] == 'Reference' }
+      urls = reference_pages.map(&:url)
+
+      expect(urls).to include('/docs/reference/')
+      expect(urls).to include('/docs/reference/page2/')
+    end
+  end
+
   context 'with non-positive paginate value' do
     [0, -5].each do |non_positive|
       it "falls back to single page generation when paginate is #{non_positive}" do
@@ -237,6 +258,26 @@ describe Jekyll::TagPager do
       expect(pager.previous_page_path).to eq('page2.html')
       expect(pager.next_page).to eq(4)
       expect(pager.next_page_path).to eq('page4.html')
+    end
+
+    it 'includes the tag directory in navigation paths when provided' do
+      pager = described_class.new(2, per_page, posts, base_path: 'docs/category/getting-started')
+      pager.update_navigation(4)
+
+      expect(pager.previous_page_path).to eq('docs/category/getting-started/')
+      expect(pager.next_page_path).to eq('docs/category/getting-started/page3.html')
+    end
+
+    it 'delegates navigation paths to a path resolver when supplied' do
+      resolver = double('PathResolver')
+      allow(resolver).to receive(:url_for).with(1).and_return('docs/category/getting-started/')
+      allow(resolver).to receive(:url_for).with(3).and_return('docs/category/getting-started/page3/')
+
+      pager = described_class.new(2, per_page, posts, path_resolver: resolver)
+      pager.update_navigation(4)
+
+      expect(pager.previous_page_path).to eq('docs/category/getting-started/')
+      expect(pager.next_page_path).to eq('docs/category/getting-started/page3/')
     end
   end
 

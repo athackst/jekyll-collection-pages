@@ -4,6 +4,108 @@ module Jekyll
   module CollectionPages
     INDEXFILE = 'index.html'
 
+    class PathTemplate
+      def initialize(raw_template, tag_field)
+        @raw_template = raw_template
+        @tag_field = tag_field
+        @template = build_effective_template(raw_template)
+      end
+
+      def for_tag(tag_value)
+        TagPath.new(@template, tag_value)
+      end
+
+      def permalink
+        TagPath.new(@template, ":#{@tag_field}", slugify_value: false).dir_for(1)
+      end
+
+      private
+
+      def build_effective_template(raw_template)
+        sanitized = sanitize_path(raw_template)
+        sanitized = default_placeholder if sanitized.empty?
+        return sanitized if contains_field_placeholder?(sanitized)
+
+        [sanitized, ':slug'].reject(&:empty?).join('/')
+      end
+
+      def sanitize_path(path)
+        path.to_s.strip.sub(%r{^/+}, '').sub(%r{/+\z}, '')
+      end
+
+      def contains_field_placeholder?(path)
+        path.include?(':slug') || path.include?(':field')
+      end
+
+      def default_placeholder
+        ':slug'
+      end
+
+      class TagPath
+        def initialize(template, value, slugify_value: true)
+          @template = template
+          @value = slugify_value ? Utils.slugify(value.to_s) : value.to_s
+        end
+
+        def dir_for(page_number)
+          segments = apply_value
+          segments = apply_page_number(segments, page_number)
+          join_segments(segments)
+        end
+
+        def filename_for(page_number)
+          return CollectionPages::INDEXFILE if page_number == 1
+
+          uses_page_directories? ? CollectionPages::INDEXFILE : "page#{page_number}.html"
+        end
+
+        def url_for(page_number)
+          dir = dir_for(page_number)
+          filename = filename_for(page_number)
+          return formatted_index_path(dir) if filename == CollectionPages::INDEXFILE
+
+          dir.empty? ? filename : File.join(dir, filename)
+        end
+
+        def uses_page_directories?
+          @template.include?(':num')
+        end
+
+        private
+
+        def apply_value
+          segments = split_template
+          segments.map { |segment| segment.gsub(':slug', @value).gsub(':field', @value) }
+        end
+
+        def split_template
+          @template.split('/').reject(&:empty?)
+        end
+
+        def apply_page_number(segments, page_number)
+          return remove_paginated_segments(segments) if page_number.nil? || page_number <= 1 || !uses_page_directories?
+
+          segments.map do |segment|
+            segment.include?(':num') ? segment.gsub(':num', page_number.to_s) : segment
+          end
+        end
+
+        def remove_paginated_segments(segments)
+          uses_page_directories? ? segments.reject { |segment| segment.include?(':num') } : segments
+        end
+
+        def join_segments(segments)
+          segments.join('/')
+        end
+
+        def formatted_index_path(dir)
+          return '' if dir.empty?
+
+          dir.end_with?('/') ? dir : "#{dir}/"
+        end
+      end
+    end
+
     class TagPagination < Generator
       safe true
       priority :lowest
@@ -33,21 +135,22 @@ module Jekyll
         per_page = normalize_paginate_value(config['paginate'], collection_name, tag_field)
 
         tag_layout_path = File.join('_layouts/', tag_layout)
+        path_template = PathTemplate.new(tag_base_path, tag_field)
 
         site.data['collection_pages'] ||= {}
 
         Jekyll.logger.debug('CollectionPages:', "Generating pages for collection: #{collection_name}")
         documents_map, metadata_map = if per_page
-                                        generate_paginated_tags(site, tag_base_path, tag_layout_path, collection_name, tag_field, per_page)
+                                        generate_paginated_tags(site, path_template, tag_layout_path, collection_name, tag_field, per_page)
                                       else
-                                        generate_tags(site, tag_base_path, tag_layout_path, collection_name, tag_field)
+                                        generate_tags(site, path_template, tag_layout_path, collection_name, tag_field)
                                       end
 
         collection_registry = site.data['collection_pages'][collection_name] ||= {}
         collection_registry[tag_field] = {
           'field' => tag_field,
           'path' => tag_base_path,
-          'permalink' => "#{tag_base_path}/:#{tag_field}",
+          'permalink' => path_template.permalink,
           'labels' => metadata_map,
           'pages' => documents_map
         }
@@ -72,25 +175,27 @@ module Jekyll
         tags.keys.sort!
       end
 
-      def generate_paginated_tags(site, tag_base_path, tag_layout, collection_name, tag_field, per_page)
+      def generate_paginated_tags(site, path_template, tag_layout, collection_name, tag_field, per_page)
         tags = sorted_tags(site, collection_name, tag_field)
 
         documents_map = {}
         metadata_map = {}
 
         tags.each do |tag|
+          tag_path = path_template.for_tag(tag)
           posts_with_tag = site.collections[collection_name].docs.select do |doc|
             doc_tags = doc.data[tag_field]
             doc_tags && (doc_tags.is_a?(String) ? doc_tags == tag : doc_tags.include?(tag))
           end
-          tag_path = File.join(tag_base_path, Utils.slugify(tag))
 
           page_count = TagPager.calculate_pages(posts_with_tag, per_page)
           tag_pages = []
           (1..page_count).each do |page_num|
-            paginator = TagPager.new(page_num, per_page, posts_with_tag)
+            paginator = TagPager.new(page_num, per_page, posts_with_tag, path_resolver: tag_path)
             paginator.update_navigation(page_count)
-            tag_page = build_page(site, tag_path, page_num, tag, tag_layout, paginator.posts, paginator)
+            page_dir = tag_path.dir_for(page_num)
+            page_filename = tag_path.filename_for(page_num)
+            tag_page = build_page(site, page_dir, page_num, tag, tag_layout, paginator.posts, paginator, page_filename: page_filename)
             site.pages << tag_page
             tag_pages << tag_page
           end
@@ -99,7 +204,7 @@ module Jekyll
           metadata_map[tag] = {
             'pages' => tag_pages,
             'page' => tag_pages.first,
-            'path' => tag_path,
+            'path' => tag_path.dir_for(1),
             'layout' => File.basename(tag_layout, '.*'),
             'paginate' => per_page
           }
@@ -112,25 +217,27 @@ module Jekyll
         [documents_map, metadata_map]
       end
 
-      def generate_tags(site, tag_base_path, tag_layout, collection_name, tag_field)
+      def generate_tags(site, path_template, tag_layout, collection_name, tag_field)
         tags = sorted_tags(site, collection_name, tag_field)
 
         documents_map = {}
         metadata_map = {}
 
         tags.each do |tag|
+          tag_path = path_template.for_tag(tag)
           posts_with_tag = site.collections[collection_name].docs.select do |doc|
             doc_tags = doc.data[tag_field]
             doc_tags && (doc_tags.is_a?(String) ? doc_tags == tag : doc_tags.include?(tag))
           end
-          tag_path = File.join(tag_base_path, Utils.slugify(tag))
-          tag_page = build_page(site, tag_path, 1, tag, tag_layout, posts_with_tag)
+          page_dir = tag_path.dir_for(1)
+          page_filename = tag_path.filename_for(1)
+          tag_page = build_page(site, page_dir, 1, tag, tag_layout, posts_with_tag, nil, page_filename: page_filename)
           site.pages << tag_page
           documents_map[tag] = posts_with_tag
           metadata_map[tag] = {
             'pages' => [tag_page],
             'page' => tag_page,
-            'path' => tag_path,
+            'path' => page_dir,
             'layout' => File.basename(tag_layout, '.*'),
             'paginate' => nil
           }
@@ -142,7 +249,7 @@ module Jekyll
         [documents_map, metadata_map]
       end
 
-      def build_page(site, dir, page_number, tag, layout, posts, paginator = nil)
+      def build_page(site, dir, page_number, tag, layout, posts, paginator = nil, page_filename: nil)
         TagIndexPage.new(
           site,
           {
@@ -151,7 +258,8 @@ module Jekyll
             tag: tag,
             layout: layout,
             posts: posts,
-            paginator: paginator
+            paginator: paginator,
+            page_filename: page_filename
           }
         )
       end
@@ -185,7 +293,7 @@ module Jekyll
       super(site, @base, '', attributes[:layout])
 
       @dir = attributes[:dir]
-      @name = page_name(attributes[:page_number])
+      @name = attributes[:page_filename] || page_name(attributes[:page_number])
 
       process(@name)
       read_yaml(@base, attributes[:layout])
@@ -202,6 +310,9 @@ module Jekyll
       raise ArgumentError, 'layout must be a non-empty string' if attributes[:layout].to_s.empty?
       raise ArgumentError, 'dir must be a non-empty string' if attributes[:dir].to_s.empty?
       raise ArgumentError, 'posts must be an array-like object' unless attributes[:posts].respond_to?(:each)
+
+      return unless attributes[:page_filename]
+      raise ArgumentError, 'page_filename must be a non-empty string' if attributes[:page_filename].to_s.empty?
     end
 
     def resolve_base(site, layout)
@@ -256,12 +367,14 @@ module Jekyll
       (all_posts.size.to_f / per_page_value).ceil
     end
 
-    def initialize(page, per_page, all_posts)
+    def initialize(page, per_page, all_posts, base_path: nil, path_resolver: nil)
       @page = page
       @per_page = per_page.to_i
       @total_posts = all_posts.size
       @total_pages = self.class.calculate_pages(all_posts, @per_page)
       @posts = slice_posts(all_posts)
+      @base_path = normalize_base_path(base_path)
+      @path_resolver = path_resolver
     end
 
     def update_navigation(total_pages = @total_pages)
@@ -276,6 +389,8 @@ module Jekyll
     end
 
     private
+
+    attr_reader :base_path, :path_resolver
 
     def slice_posts(all_posts)
       return [] if @per_page <= 0
@@ -295,7 +410,23 @@ module Jekyll
     def page_path(target_page)
       return unless target_page
 
-      target_page == 1 ? CollectionPages::INDEXFILE : "page#{target_page}.html"
+      return path_resolver.url_for(target_page) if path_resolver
+
+      filename = target_page == 1 ? CollectionPages::INDEXFILE : "page#{target_page}.html"
+      return filename unless base_path
+
+      if target_page == 1
+        File.join(base_path, '')
+      else
+        File.join(base_path, filename)
+      end
+    end
+
+    def normalize_base_path(path)
+      return nil if path.nil?
+
+      trimmed = path.to_s.strip
+      trimmed.empty? ? nil : trimmed
     end
   end
 end

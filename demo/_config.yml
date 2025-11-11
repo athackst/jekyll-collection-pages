@@ -60,14 +60,14 @@ links:
 collection_pages:
   - collection: docs
     field: category
-    path: /docs
+    path: /docs/:field/page:num
     layout: collection_layout.html
     paginate: 6
   - collection: articles
     field: tags
-    path: /tags
+    path: /tags/:field/page:num
     layout: tags.html
-    paginate: 10
+    paginate: 3
 
 ####################
 # jekyll-paginate settings

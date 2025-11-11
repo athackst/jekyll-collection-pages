@@ -138,6 +138,8 @@ Overview pages can link to tag indexes via the metadata map, and each generated 
 {% endraw %}
 ```
 
+Because those pagination paths already include the tag directory (`gallery/tags/<label>/…`), you can safely pipe them through `relative_url` without additional string concatenation.
+
 ## Troubleshooting
 
 - Ensure every collection lists `output: true` if you expect to link to its documents.

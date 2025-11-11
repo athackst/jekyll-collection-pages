@@ -42,6 +42,8 @@ layout: default
 {% endraw %}
 ```
 
+`previous_page_path` and `next_page_path` already include the generated tag directory, so `| relative_url` expands to the correct absolute link no matter how deeply nested the index lives.
+
 ## “View all” links from an overview page
 
 ```liquid

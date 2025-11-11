@@ -78,7 +78,7 @@ The plugin copies `page.posts`, `page.tag`, and optional `page.paginator` into t
 
 - Type: `Integer`  
 - Required: ✖  
-- Description: When present, splits the documents into pages of the given size. Pagination behaves like Jekyll’s built-in paginator (`page.paginator` contains `page`, `total_pages`, `previous_page_path`, etc.).
+- Description: When present, splits the documents into pages of the given size. Pagination behaves like Jekyll’s built-in paginator (`page.paginator` exposes `page`, `total_pages`, `previous_page_path`, `next_page_path`, etc.) and the generated paths already include the tag directory (e.g. `docs/category/getting-started/`, `docs/category/getting-started/page2.html`), so piping them through `relative_url` yields working links.
 
 Omit this key for single-page listings.
 

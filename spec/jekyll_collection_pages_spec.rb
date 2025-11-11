@@ -91,6 +91,42 @@ describe Jekyll::CollectionPages::TagPagination do
       expect(articles_info['labels'].values.flat_map { |entry| entry['pages'] }).not_to be_empty
     end
   end
+
+  context 'with non-positive paginate value' do
+    [0, -5].each do |non_positive|
+      it "falls back to single page generation when paginate is #{non_positive}" do
+        site.config['collection_pages'] = {
+          'collection' => 'docs',
+          'field' => 'category',
+          'path' => 'docs/category',
+          'layout' => 'category_layout.html',
+          'paginate' => non_positive
+        }
+
+        generator.generate(site)
+        field_info = site.data['collection_pages']['docs']['category']
+        field_info['labels'].each_value do |entry|
+          expect(entry['pages'].size).to eq(1)
+          expect(entry['paginate']).to be_nil
+        end
+      end
+    end
+  end
+
+  context 'with non-numeric paginate value' do
+    it 'raises an informative error' do
+      site.config['collection_pages'] = {
+        'collection' => 'docs',
+        'field' => 'category',
+        'path' => 'docs/category',
+        'layout' => 'category_layout.html',
+        'paginate' => 'ten'
+      }
+
+      expect { generator.generate(site) }
+        .to raise_error(ArgumentError, /paginate value .*numeric/i)
+    end
+  end
 end
 
 describe Jekyll::TagIndexPage do
@@ -119,8 +155,9 @@ describe Jekyll::TagIndexPage do
   end
 
   context 'with pagination' do
-    let(:paginator) { Jekyll::TagPager.new(1, 1, posts) }
     subject { described_class.new(site, attributes.merge(paginator: paginator)) }
+
+    let(:paginator) { Jekyll::TagPager.new(1, 1, posts) }
 
     it 'initializes with paginator' do
       expect(subject.data['paginator']).to be_a(Jekyll::TagPager)
@@ -161,9 +198,10 @@ describe Jekyll::TagPager do
   end
 
   describe '#initialize' do
+    subject(:pager) { described_class.new(2, per_page, posts) }
+
     let(:posts) { (1..20).map { |i| double("Post#{i}") } }
     let(:per_page) { 6 }
-    subject(:pager) { described_class.new(2, per_page, posts) }
 
     it 'normalizes per_page and computes totals' do
       expect(pager.page).to eq(2)

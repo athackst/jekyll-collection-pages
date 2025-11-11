@@ -30,7 +30,7 @@ module Jekyll
         tag_field = config['field']
         tag_base_path = config['path']
         tag_layout = config['layout'] || 'collection_layout.html'
-        per_page = config['paginate']
+        per_page = normalize_paginate_value(config['paginate'], collection_name, tag_field)
 
         tag_layout_path = File.join('_layouts/', tag_layout)
 
@@ -154,6 +154,23 @@ module Jekyll
             paginator: paginator
           }
         )
+      end
+
+      private
+
+      def normalize_paginate_value(value, collection_name, tag_field)
+        return nil if value.nil?
+
+        per_page = Integer(value)
+        return per_page if per_page.positive?
+
+        Jekyll.logger.warn('CollectionPages:',
+                           "Non-positive paginate value #{value.inspect} for collection '#{collection_name}' field '#{tag_field}'. " \
+                           'Falling back to single page generation.')
+        nil
+      rescue ArgumentError, TypeError
+        raise ArgumentError,
+              "Invalid paginate value #{value.inspect} for collection '#{collection_name}' field '#{tag_field}'. Expected a numeric value."
       end
     end
   end

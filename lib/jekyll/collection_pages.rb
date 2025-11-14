@@ -187,8 +187,7 @@ module Jekyll
           page_count = TagPager.calculate_pages(posts_with_tag, per_page)
           tag_pages = []
           (1..page_count).each do |page_num|
-            paginator = TagPager.new(page_num, per_page, posts_with_tag, path_resolver: tag_path)
-            paginator.update_navigation(page_count)
+            paginator = TagPager.new(page_num, per_page, posts_with_tag, tag_path)
             page_dir = tag_path.dir_for(page_num)
             page_filename = tag_path.filename_for(page_num)
             tag_page = build_page(site, page_dir, page_filename, tag, tag_layout, paginator.posts, paginator)
@@ -302,35 +301,31 @@ module Jekyll
                 :previous_page, :previous_page_path, :next_page, :next_page_path
 
     LIQUID_MAP = {
-      'page' => :page,
-      'per_page' => :per_page,
-      'posts' => :posts,
-      'total_posts' => :total_posts,
-      'total_pages' => :total_pages,
-      'previous_page' => :previous_page,
-      'previous_page_path' => :previous_page_path,
-      'next_page' => :next_page,
-      'next_page_path' => :next_page_path
+      'page' => :page, # the current page number
+      'per_page' => :per_page, # the number of posts per page
+      'posts' => :posts, # the paginated posts for this page
+      'total_posts' => :total_posts, # the total number of posts being paginated
+      'total_pages' => :total_pages, # the total number of pages
+      'previous_page' => :previous_page, # the previous page number, or nil
+      'previous_page_path' => :previous_page_path, # the previous page path, or nil
+      'next_page' => :next_page, # the next page number, or nil
+      'next_page_path' => :next_page_path # the next page path, or nil
     }.freeze
 
     def self.calculate_pages(all_posts, per_page)
       per_page_value = per_page.to_i
-      return 0 if per_page_value <= 0
+      return 1 if per_page_value <= 0
 
       (all_posts.size.to_f / per_page_value).ceil
     end
 
-    def initialize(page, per_page, all_posts, base_path: nil, path_resolver: nil)
-      @page = page
-      @per_page = per_page.to_i
+    def initialize(page_num, per_page, all_posts, path_resolver)
+      @page = page_num
+      @per_page = per_page.to_i.positive? ? per_page.to_i : 0
       @total_posts = all_posts.size
       @total_pages = self.class.calculate_pages(all_posts, @per_page)
       @posts = slice_posts(all_posts)
-      @base_path = normalize_base_path(base_path)
       @path_resolver = path_resolver
-    end
-
-    def update_navigation(total_pages = @total_pages)
       @previous_page = previous_page_number
       @next_page = next_page_number(total_pages)
       @previous_page_path = page_path(@previous_page)
@@ -343,10 +338,10 @@ module Jekyll
 
     private
 
-    attr_reader :base_path, :path_resolver
+    attr_reader :path_resolver
 
     def slice_posts(all_posts)
-      return [] if @per_page <= 0
+      return all_posts if @per_page <= 0
 
       start_index = (@page - 1) * @per_page
       all_posts.slice(start_index, @per_page) || []
@@ -361,25 +356,9 @@ module Jekyll
     end
 
     def page_path(target_page)
-      return unless target_page
+      return unless target_page && target_page <= total_pages
 
-      return path_resolver.url_for(target_page) if path_resolver
-
-      filename = target_page == 1 ? CollectionPages::INDEXFILE : "page#{target_page}.html"
-      return filename unless base_path
-
-      if target_page == 1
-        File.join(base_path, '')
-      else
-        File.join(base_path, filename)
-      end
-    end
-
-    def normalize_base_path(path)
-      return nil if path.nil?
-
-      trimmed = path.to_s.strip
-      trimmed.empty? ? nil : trimmed
+      path_resolver.url_for(target_page)
     end
   end
 end

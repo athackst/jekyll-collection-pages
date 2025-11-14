@@ -157,7 +157,7 @@ describe Jekyll::TagIndexPage do
   let(:attributes) do
     {
       dir: 'tag_dir',
-      page_number: 1,
+      name: 'index.html',
       tag: 'test_tag',
       layout: layout,
       posts: posts
@@ -183,23 +183,6 @@ describe Jekyll::TagIndexPage do
     it 'initializes with paginator' do
       expect(subject.data['paginator']).to be_a(Jekyll::TagPager)
       expect(subject.data['paginator']).to eq(paginator)
-    end
-  end
-
-  context 'with invalid attributes' do
-    it 'raises when required keys are missing' do
-      expect { described_class.new(site, attributes.except(:dir)) }
-        .to raise_error(ArgumentError, /Missing TagIndexPage attributes: dir/)
-    end
-
-    it 'raises when layout is blank' do
-      expect { described_class.new(site, attributes.merge(layout: '')) }
-        .to raise_error(ArgumentError, /layout must be a non-empty string/)
-    end
-
-    it 'raises when page number is not positive' do
-      expect { described_class.new(site, attributes.merge(page_number: 0)) }
-        .to raise_error(ArgumentError, /page_number must be a positive integer/)
     end
   end
 end

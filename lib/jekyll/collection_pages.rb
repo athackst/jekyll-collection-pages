@@ -191,7 +191,7 @@ module Jekyll
             paginator.update_navigation(page_count)
             page_dir = tag_path.dir_for(page_num)
             page_filename = tag_path.filename_for(page_num)
-            tag_page = build_page(site, page_dir, page_num, tag, tag_layout, paginator.posts, paginator, page_filename: page_filename)
+            tag_page = build_page(site, page_dir, page_filename, tag, tag_layout, paginator.posts, paginator)
             site.pages << tag_page
             tag_pages << tag_page
           end
@@ -223,7 +223,7 @@ module Jekyll
           tag_path = path_template.for_tag(tag)
           page_dir = tag_path.dir_for(1)
           page_filename = tag_path.filename_for(1)
-          tag_page = build_page(site, page_dir, 1, tag, tag_layout, posts_with_tag, nil, page_filename: page_filename)
+          tag_page = build_page(site, page_dir, page_filename, tag, tag_layout, posts_with_tag, nil)
           site.pages << tag_page
           documents_map[tag] = posts_with_tag
           metadata_map[tag] = {
@@ -241,17 +241,16 @@ module Jekyll
         [documents_map, metadata_map]
       end
 
-      def build_page(site, dir, page_number, tag, layout, posts, paginator = nil, page_filename: nil)
+      def build_page(site, dir, page_filename, tag, layout, posts, paginator = nil)
         TagIndexPage.new(
           site,
           {
             dir: dir,
-            page_number: page_number,
+            name: page_filename,
             tag: tag,
             layout: layout,
             posts: posts,
-            paginator: paginator,
-            page_filename: page_filename
+            paginator: paginator
           }
         )
       end
@@ -275,63 +274,25 @@ module Jekyll
     end
   end
 
-  class TagIndexPage < Page
-    REQUIRED_KEYS = %i[dir page_number tag layout posts].freeze
-
+  class TagIndexPage < PageWithoutAFile
     def initialize(site, attributes)
-      validate_attributes!(attributes)
-      @site = site
-      @base = resolve_base(site, attributes[:layout])
-      super(site, @base, '', attributes[:layout])
+      dir = attributes[:dir]
+      name = attributes[:name]
+      tag = attributes[:tag]
+      layout = attributes[:layout]
+      posts = attributes[:posts]
+      paginator = attributes[:paginator]
+      # This sets up a page that has no source file on disk.
+      super(site, site.source, dir, name) # also calls process(name) internally
 
-      @dir = attributes[:dir]
-      @name = attributes[:page_filename] || page_name(attributes[:page_number])
+      self.content = '' # virtual page body (optional)
 
-      process(@name)
-      read_yaml(@base, attributes[:layout])
-      assign_metadata(attributes)
-    end
-
-    private
-
-    def validate_attributes!(attributes)
-      missing = REQUIRED_KEYS.reject { |key| attributes.key?(key) }
-      raise ArgumentError, "Missing TagIndexPage attributes: #{missing.join(', ')}" if missing.any?
-
-      raise ArgumentError, 'page_number must be a positive integer' unless attributes[:page_number].to_i.positive?
-      raise ArgumentError, 'layout must be a non-empty string' if attributes[:layout].to_s.empty?
-      raise ArgumentError, 'dir must be a non-empty string' if attributes[:dir].to_s.empty?
-      raise ArgumentError, 'posts must be an array-like object' unless attributes[:posts].respond_to?(:each)
-
-      return unless attributes[:page_filename]
-      raise ArgumentError, 'page_filename must be a non-empty string' if attributes[:page_filename].to_s.empty?
-    end
-
-    def resolve_base(site, layout)
-      site_layout = File.join(site.source, layout)
-      return site.source if File.exist?(site_layout)
-
-      theme_layout = site.theme && File.join(site.theme.root, layout)
-      return site.theme.root if theme_layout && File.exist?(theme_layout)
-
-      site.source
-    end
-
-    def page_name(page_number)
-      page_number == 1 ? CollectionPages::INDEXFILE : "page#{page_number}.html"
-    end
-
-    def assign_metadata(attributes)
-      data.merge!(
-        'layout' => File.basename(attributes[:layout], '.*'),
-        'tag' => attributes[:tag],
-        'title' => attributes[:tag].to_s,
-        'posts' => attributes[:posts]
-      )
-      assign_paginator(attributes[:paginator])
-    end
-
-    def assign_paginator(paginator)
+      self.data = {
+        'layout' => File.basename(layout, '.*'), # layout NAME (no path)
+        'tag' => tag,
+        'title' => tag.to_s,
+        'posts' => posts
+      }
       data['paginator'] = paginator if paginator
     end
   end

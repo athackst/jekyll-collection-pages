@@ -5,58 +5,104 @@ module Jekyll
     INDEXFILE = 'index.html'
 
     class PathTemplate
-      def initialize(raw_template, tag_field)
-        @raw_template = raw_template
+      def initialize(raw_template:, tag_field:, collection_name:)
         @tag_field = tag_field
+        @collection_name = collection_name
         @template = build_effective_template(raw_template)
       end
 
       def for_tag(tag_value)
-        TagPath.new(@template, tag_value)
+        TagPathResolver.new(@template, tag_value)
       end
 
       def permalink
-        TagPath.new(@template, ":#{@tag_field}", slugify_value: false).dir_for(1)
+        TagPathResolver.new(@template, ":#{@tag_field}", slugify_value: false).dir_for(1)
       end
 
       private
 
-      def build_effective_template(raw_template)
-        sanitized = sanitize_path(raw_template)
+      def build_effective_template(raw)
+        sanitized = sanitize_path(raw)
         sanitized = default_placeholder if sanitized.empty?
-        return sanitized if contains_field_placeholder?(sanitized)
+        sanitized = add_field_placeholder(sanitized)
+        sanitized = add_num_placeholder(sanitized)
+        sanitized = add_index(sanitized)
+        Jekyll.logger.debug('CollectionPages:', "Using path template '#{sanitized}' for collection '#{@collection_name}'.")
+        validate_template(sanitized)
 
-        [sanitized, ':slug'].reject(&:empty?).join('/')
+        sanitized
       end
 
       def sanitize_path(path)
         path.to_s.strip.sub(%r{^/+}, '').sub(%r{/+\z}, '')
       end
 
-      def contains_field_placeholder?(path)
-        path.include?(':slug') || path.include?(':field')
-      end
-
       def default_placeholder
-        ':slug'
+        @collection_name.to_s
       end
 
-      class TagPath
-        def initialize(template, value, slugify_value: true)
+      def add_field_placeholder(path)
+        return path if path.include?(':field')
+
+        raise ArgumentError, "Path template '#{path}' must include a ':field' placeholder." if path.end_with?('.html') || path.end_with?('.htm')
+
+        "#{path}/:field"
+      end
+
+      def add_num_placeholder(path)
+        return path if path.include?(':num')
+
+        raise ArgumentError, "Path template '#{path}' must include a ':num' placeholder." if path.end_with?('.html') || path.end_with?('.htm')
+
+        "#{path}/page:num"
+      end
+
+      def add_index(path)
+        return path if path.end_with?('.html') || path.end_with?('.htm')
+
+        "#{path}/#{CollectionPages::INDEXFILE}"
+      end
+
+      def validate_template(path)
+        field_count = path.scan(':field').size
+        num_count = path.scan(':num').size
+
+        error_msg = ''
+        error_msg += "Path template '#{path}' must include exactly one ':field' placeholder. " if field_count != 1
+        error_msg += "Path template '#{path}' must include exactly one ':num' placeholder. " if num_count != 1
+
+        if num_count.positive? && field_count.positive?
+          field_idx = path.index(':field')
+          num_idx = path.index(':num')
+          error_msg += "In path template '#{path}', ':field' must come before ':num'. " if num_idx < field_idx
+        end
+
+        raise ArgumentError, error_msg unless error_msg.empty?
+      end
+
+      class TagPathResolver
+        def initialize(template, field_value, slugify_value: true)
           @template = template
-          @value = slugify_value ? Utils.slugify(value.to_s) : value.to_s
+          @value = slugify_value ? Utils.slugify(field_value.to_s) : field_value.to_s
+          @segments = template.split('/').reject(&:empty?)
         end
 
         def dir_for(page_number)
-          segments = apply_value
-          segments = apply_page_number(segments, page_number)
-          join_segments(segments)
+          segments = @segments
+          segments = apply_field_value(segments)
+          segments = page_number == 1 ? remove_paginated_segments(segments) : apply_page_number(segments, page_number)
+          segments = drop_file_segment(segments)
+
+          File.join(*segments)
         end
 
         def filename_for(page_number)
           return CollectionPages::INDEXFILE if page_number == 1
 
-          uses_page_directories? ? CollectionPages::INDEXFILE : "page#{page_number}.html"
+          segments = @segments.last(1)
+          segments = apply_field_value(segments)
+          segments = apply_page_number(segments, page_number)
+          segments.join
         end
 
         def url_for(page_number)
@@ -64,44 +110,40 @@ module Jekyll
           filename = filename_for(page_number)
           return formatted_index_path(dir) if filename == CollectionPages::INDEXFILE
 
-          dir.empty? ? filename : File.join(dir, filename)
-        end
-
-        def uses_page_directories?
-          @template.include?(':num')
+          dir.empty? ? "/#{filename}" : "/#{dir}/#{filename}"
         end
 
         private
 
-        def apply_value
-          segments = split_template
-          segments.map { |segment| segment.gsub(':slug', @value).gsub(':field', @value) }
-        end
-
-        def split_template
-          @template.split('/').reject(&:empty?)
+        def apply_field_value(segments)
+          segments.map do |segment|
+            segment.include?(':field') ? segment.gsub(':field', @value) : segment
+          end
         end
 
         def apply_page_number(segments, page_number)
-          return remove_paginated_segments(segments) if page_number.nil? || page_number <= 1 || !uses_page_directories?
-
           segments.map do |segment|
             segment.include?(':num') ? segment.gsub(':num', page_number.to_s) : segment
           end
         end
 
-        def remove_paginated_segments(segments)
-          uses_page_directories? ? segments.reject { |segment| segment.include?(':num') } : segments
+        def drop_file_segment(segments)
+          if segments.last.end_with?('.html') || segments.last.end_with?('.htm')
+            segments[0...-1]
+          else
+            segments
+          end
         end
 
-        def join_segments(segments)
-          segments.join('/')
+        def remove_paginated_segments(segments)
+          number_index = segments.index { |segment| segment.include?(':num') }
+          number_index ? segments[0...number_index] : segments
         end
 
         def formatted_index_path(dir)
           return '' if dir.empty?
 
-          dir.end_with?('/') ? dir : "#{dir}/"
+          "/#{dir}/"
         end
       end
     end
@@ -135,7 +177,7 @@ module Jekyll
         per_page = normalize_paginate_value(config['paginate'], collection_name, tag_field)
 
         tag_layout_path = File.join('_layouts/', tag_layout)
-        path_template = PathTemplate.new(tag_base_path, tag_field)
+        path_template = PathTemplate.new(raw_template: tag_base_path, tag_field: tag_field, collection_name: collection_name)
 
         site.data['collection_pages'] ||= {}
 

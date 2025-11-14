@@ -350,3 +350,130 @@ describe Jekyll::TagPager do
     end
   end
 end
+
+RSpec.describe Jekyll::CollectionPages::PathTemplate do
+  def build(raw, field: 'category', collection: 'docs')
+    described_class.new(raw_template: raw, tag_field: field, collection_name: collection)
+  end
+
+  describe 'defaults & sanitization' do
+    it 'defaults to /<collection>/:field/page:num when path is nil' do
+      tpl = build(nil)
+      expect(tpl.instance_variable_get(:@template)).to eq('docs/:field/page:num/index.html')
+    end
+
+    it 'defaults to /<collection>/:field/page:num when path is empty' do
+      tpl = build('')
+      expect(tpl.instance_variable_get(:@template)).to eq('docs/:field/page:num/index.html')
+    end
+
+    it 'sanitizes trailing slashes' do
+      tpl = build('/docs/:field/page:num/')
+      expect(tpl.instance_variable_get(:@template)).to eq('docs/:field/page:num/index.html')
+    end
+  end
+
+  describe 'placeholder validation' do
+    it 'accepts paths that include :field' do
+      tpl = build('docs/:field/page:num')
+      expect(tpl.instance_variable_get(:@template)).to include(':field')
+    end
+
+    it 'accepts paths that include :num' do
+      tpl = build('docs/:field/page:num')
+      expect(tpl.instance_variable_get(:@template)).to include(':num')
+    end
+
+    it 'adds placeholders when path has no placeholders' do
+      tpl = build('/docs/reference')
+      expect(tpl.instance_variable_get(:@template)).to eq('docs/reference/:field/page:num/index.html')
+    end
+
+    it 'raises error when :field is missing and path ends with .html' do
+      expect do
+        build('/docs/page:num.html')
+      end.to raise_error(ArgumentError, /must include a ':field' placeholder/)
+    end
+
+    it 'raises error when :num is missing and path ends with .html' do
+      expect do
+        build('/docs/:field/index.html')
+      end.to raise_error(ArgumentError, /must include a ':num' placeholder/)
+    end
+
+    it 'adds :num when missing' do
+      tpl = build('/docs/:field')
+      expect(tpl.instance_variable_get(:@template)).to eq('docs/:field/page:num/index.html')
+    end
+
+    it 'raises an error when :field is missing but :num is present' do
+      expect do
+        build('/docs/:num')
+      end.to raise_error(ArgumentError, /':field' must come before ':num'/)
+    end
+
+    it 'raises an error when :num comes before :field' do
+      expect do
+        build('/docs/:num/:field')
+      end.to raise_error(ArgumentError, /':field' must come before ':num'/)
+    end
+
+    it 'raises an error when multiple :field placeholders are present' do
+      expect do
+        build('/docs/:field/:num/:field')
+      end.to raise_error(ArgumentError, /must include exactly one ':field' placeholder/)
+    end
+
+    it 'raises an error when multiple :num placeholders are present' do
+      expect do
+        build('/docs/:field/:num/:num')
+      end.to raise_error(ArgumentError, /must include exactly one ':num' placeholder/)
+    end
+  end
+
+  describe '#for_tag' do
+    it 'returns a TagPath instance' do
+      tpl = build('docs/:field/page:num')
+      tag_path = tpl.for_tag('Plugin Comparisons')
+      expect(tag_path).to respond_to(:dir_for)
+      expect(tag_path).to respond_to(:filename_for)
+      expect(tag_path).to respond_to(:url_for)
+    end
+  end
+
+  describe 'integration with TagPath' do
+    it 'slugifies :field (pretty) through TagPath into first-page dir' do
+      tpl = build('docs/:field/page:num')
+      tag_path = tpl.for_tag('Plugin Comparisons')
+      # first page dir should be docs/plugin-comparisons
+      expect(tag_path.dir_for(1)).to eq('docs/plugin-comparisons')
+    end
+
+    it 'file pagination emits page2.html for page 2' do
+      tpl = build('docs/:field/page:num.html')
+      tag_path = tpl.for_tag('Reference')
+      expect(tag_path.dir_for(2)).to eq('docs/reference')     # directory part
+      expect(tag_path.filename_for(2)).to eq('page2.html')    # file part
+      expect(tag_path.url_for(2)).to eq('/docs/reference/page2.html')
+    end
+
+    it 'page:num pagination emits directory /page2/index.html' do
+      tpl = build('docs/:field/page:num')
+      tag_path = tpl.for_tag('Reference')
+      expect(tag_path.dir_for(2)).to eq('docs/reference/page2')
+      expect(tag_path.filename_for(2)).to eq('index.html')
+      expect(tag_path.url_for(2)).to eq('/docs/reference/page2/')
+    end
+
+    it 'first page filename is always index.html regardless of pattern' do
+      tpl1 = build('docs/:field/page:num')
+      expect(tpl1.for_tag('Ref').filename_for(1)).to eq('index.html')
+
+      tpl2 = build('docs/:field/page:num.html')
+      expect(tpl2.for_tag('Ref').filename_for(1)).to eq('index.html')
+
+      tpl3 = build('docs/:field/page:name')
+      expect(tpl3.for_tag('Ref').filename_for(1)).to eq('index.html')
+    end
+  end
+end

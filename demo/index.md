@@ -28,6 +28,7 @@ See how `jekyll-collection-pages` organizes technical documentation:
 
 See how `jekyll-collection-pages` can organize collections like posts:
 
+- [Tag directory](directory.md)
 - [Tag index](tags.md)
 - [Tag gallery](gallery.md)
 
@@ -60,5 +61,3 @@ Ready to use `jekyll-collection-pages` in your own project?
 - [GitHub Repository](https://github.com/athackst/jekyll-collection-pages)
 - [Report an Issue](https://github.com/athackst/jekyll-collection-pages/issues)
 - [Contribution Guidelines](contributing.md)
-
-We hope this demo site helps you understand the power and flexibility of Jekyll Collection Pages. Happy exploring!

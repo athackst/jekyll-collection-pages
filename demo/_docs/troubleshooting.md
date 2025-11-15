@@ -39,6 +39,12 @@ Having trouble seeing generated pages or data? Start here.
   {% endraw %}
   ```
 
+## Path template errors
+
+- `path` values must resolve to exactly one `:field` placeholder and one `:num` placeholder. Directory-style paths (no `.html`/`.htm`) automatically become `<path>/:field/page:num/index.html`, but explicit filenames must include both placeholders.
+- `:field` must appear before `:num`, and they cannot live in the same path segment.
+- When the build fails with an error referencing these placeholders, trim any trailing slashes and adjust the order. The generator logs the sanitized template in debug mode so you can confirm the final value.
+
 ## Liquid include expects `site.tags`
 
 - Pass the plugin’s document map directly:
@@ -49,7 +55,7 @@ Having trouble seeing generated pages or data? Start here.
   {% endraw %}
   ```
 
-- If the include also needs the generated page URL, read `site.data.collection_pages[collection][field].labels[label].page.url` (or build it from the configured `path` plus the slugified label).
+- If the include also needs the generated page URL, read `site.data.collection_pages[collection][field].labels[label].index.url` (or build it from the configured `path` plus the slugified label).
 
 ## Layout doesn’t see `page.posts`
 

@@ -91,8 +91,9 @@ layout: default
 
 Every build populates a hash at `site.data.collection_pages[collection][field]` that contains:
 
-- `field`, `path`, and `permalink`: the configuration details
-- `pages`: documents grouped by label (same shape as `site.tags`)
+- `template` → the full sanitized template used for creating pages with placeholders intact.  Directory-style values from `_config.yml` are auto-appended with `:field/page:num/index.html`. (e.g. `/docs/category/:field/page:num/index.html`)
+- `permalink` → the sanitized template for the index with placeholders intact (e.g. `/docs/category/:field/`)
+- `pages` → documents grouped by label (`{ label => [documents...] }`)
 - `labels`: metadata describing the generated index pages
 
 Iterate through the documents for a field:
@@ -119,7 +120,28 @@ Pair the documents with their metadata when you need generated URLs or paginatio
   {% assign label = entry | first %}
   {% assign documents = entry | last %}
   {% assign meta = info.labels[label] %}
-  <h2> <a href="{{ meta.page.url | relative_url }}">{{ label }}</a> ({{ documents.size }})</h2>
+  <h2> <a href="{{ meta.index.url | relative_url }}">{{ label }}</a> ({{ documents.size }})</h2>
+  <ul>
+  {% for entry in documents %}
+    <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
+  {% endfor %}
+  </ul>
+{% endfor %}
+{% endraw %}
+```
+
+Or create the links to the generated documents by subsituting the path:
+
+```liquid
+{% raw %}
+{%- assign info = site.data.collection_pages.articles.tags %}
+{%- assign index_permalink = site.data.collection_pages.articles.tags.permalink %}
+
+{% for entry in info.pages %}
+  {% assign label = entry | first %}
+  {% assign documents = entry | last %}
+  {% assign tag_url = index_permalink | replace: ':field', label %}
+  <h2> <a href="{{ tag_url | relative_url }}">{{ label }}</a> ({{ documents.size }})</h2>
   <ul>
   {% for entry in documents %}
     <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>

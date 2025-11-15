@@ -30,15 +30,13 @@ describe Jekyll::CollectionPages::TagPagination do
         expect(documents).not_to be_empty
         expect(documents.all? { |doc| doc.is_a?(Jekyll::Document) }).to be true
       end
-      expect(field_info['field']).to eq('category')
-      expect(field_info['path']).to eq('docs/category')
-      expect(field_info['permalink']).to eq('docs/category/:category')
+      expect(field_info['template']).to eq('/docs/category/:field/page:num/index.html')
+      expect(field_info['permalink']).to eq('/docs/category/:field/')
       labels = field_info['labels']
       expect(labels.keys).to include('Getting Started', 'Reference', 'Usage')
       labels.each_value do |entry|
         expect(entry['pages']).not_to be_empty
-        expect(entry['page']).to be_a(Jekyll::TagIndexPage)
-        expect(entry['path']).not_to be_empty
+        expect(entry['index']).to be_a(Jekyll::TagIndexPage)
       end
     end
   end
@@ -80,12 +78,10 @@ describe Jekyll::CollectionPages::TagPagination do
       expect(docs_field_map.values.flatten).not_to be_empty
       expect(articles_field_map.values.flatten).not_to be_empty
 
-      expect(docs_info['field']).to eq('category')
-      expect(docs_info['path']).to eq('docs/category')
-      expect(docs_info['permalink']).to eq('docs/category/:category')
-      expect(articles_info['field']).to eq('tags')
-      expect(articles_info['path']).to eq('articles/tags')
-      expect(articles_info['permalink']).to eq('articles/tags/:tags')
+      expect(docs_info['template']).to eq('/docs/category/:field/page:num/index.html')
+      expect(docs_info['permalink']).to eq('/docs/category/:field/')
+      expect(articles_info['template']).to eq('/articles/tags/:field/page:num/index.html')
+      expect(articles_info['permalink']).to eq('/articles/tags/:field/')
 
       expect(docs_info['labels'].values.flat_map { |entry| entry['pages'] }).not_to be_empty
       expect(articles_info['labels'].values.flat_map { |entry| entry['pages'] }).not_to be_empty
@@ -428,6 +424,12 @@ RSpec.describe Jekyll::CollectionPages::PathTemplate do
       expect do
         build('/docs/:field/:num/:num')
       end.to raise_error(ArgumentError, /must include exactly one ':num' placeholder/)
+    end
+
+    it 'raises an error when :field and :num are in the same file segment' do
+      expect do
+        build('/docs/:field:num/index.html')
+      end.to raise_error(ArgumentError, /':field' and ':num' cannot be in the same file segment/)
     end
   end
 

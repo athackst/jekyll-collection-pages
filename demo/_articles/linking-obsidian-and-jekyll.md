@@ -44,11 +44,11 @@ That's where this setup comes in. By leveraging Jekyll collections, smart use of
 1. In `_config.yml`, add:
 
    ```yaml
-   collection_pages:
-     - collection: articles
-       tag_field: tags
-       path: tags
-       layout: tag_layout.html
+collection_pages:
+  - collection: articles
+    field: tags
+    path: tags
+    layout: tag_layout.html
    ```
 
 2. Create `_layouts/tag_layout.html` for your tag pages.

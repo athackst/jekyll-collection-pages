@@ -60,12 +60,12 @@ links:
 collection_pages:
   - collection: docs
     field: category
-    path: /docs/:field/page:num
+    path: /docs
     layout: collection_layout.html
     paginate: 6
   - collection: articles
     field: tags
-    path: /tags/:field/page:num
+    path: /tags
     layout: tags.html
     paginate: 3
 

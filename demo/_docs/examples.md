@@ -16,15 +16,20 @@ collection_pages:
     path: blog/category
     layout: category_page.html
     paginate: 10
+  - collection: posts
+    field: category
+    path: blog/category/:field-page:num.html
+    layout: category_page.html
+    paginate: 10
 ```
 
-This configuration will create category pages for your blog posts, with 10 posts per page.
+The first entry produces folder-style pagination such as `/blog/category/reference/` and `/blog/category/reference/page2/`. The second entry demonstrates file-style pagination (e.g. `/blog/category/reference.html`, `/blog/category/reference-page2.html`). Both obey the same placeholder rules; pick the style that fits your permalink scheme.
 
 Render a category listing with the exported data registry:
 
 ```liquid
 {%raw %}
-{% assign categories = site.data.collection_pages.posts.category %}
+{% assign categories = site.data.collection_pages.posts.category.pages %}
 {% for entry in categories %}
   {% assign name = entry[0] %}
   {% assign docs = entry[1] %}
@@ -54,8 +59,11 @@ This setup produces unpaginated doc sections and paginated tutorial difficulty i
 ```liquid
 {% raw %}
 {% assign tutorials_info = site.data.collection_pages.tutorials.difficulty %}
-{% assign meta = tutorials_info.labels[label] %}
-<a href="{{ meta.page.url | relative_url }}">View all tutorials for {{ label }}</a>
+{% for entry in tutorials_info.pages %}
+  {% assign label = entry | first %}
+  {% assign meta = tutorials_info.labels[label] %}
+  <a href="{{ meta.index.url | relative_url }}">View all tutorials for {{ label }}</a>
+{% endfor %}
 {% endraw %}
 ```
 
@@ -78,7 +86,7 @@ In your tag overview page:
   {% assign label = entry | first %}
   {% assign items = entry | last %}
   {% assign meta = projects_info.labels[label] %}
-  <a href="{{ meta.page.url | relative_url }}">{{ label }} ({{ items.size }})</a>
+  <a href="{{ meta.index.url | relative_url }}">{{ label }} ({{ items.size }})</a>
 {% endfor %}
 {% endraw %}
 ```
@@ -99,7 +107,7 @@ collection_pages:
     layout: book_author.html
 ```
 
-Use `site.data.collection_pages.books.genre.pages` and `site.data.collection_pages.books.author.pages` to populate dashboards, and `site.data.collection_pages.books.genre.labels[label].page.url` when you need the generated index URL.
+Use `site.data.collection_pages.books.genre.pages` and `site.data.collection_pages.books.author.pages` to populate dashboards, and `site.data.collection_pages.books.genre.labels[label].index.url` when you need the generated index URL.
 
 ## Image gallery collections
 
@@ -117,8 +125,11 @@ Overview pages can link to tag indexes via the metadata map, and each generated 
 ```liquid
 {% raw %}
 {% assign gallery_info = site.data.collection_pages.gallery.tags %}
-{% assign meta = gallery_info.labels[label] %}
-<a href="{{ meta.page.url | relative_url }}">View all in {{ label }}</a>
+{% for entry in gallery_info.pages %}
+  {% assign label = entry | first %}
+  {% assign meta = gallery_info.labels[label] %}
+  <a href="{{ meta.index.url | relative_url }}">View all in {{ label }}</a>
+{% endfor %}
 {% endraw %}
 ```
 

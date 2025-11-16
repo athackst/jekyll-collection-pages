@@ -50,8 +50,8 @@ Then rebuild your site:
 bundle exec jekyll build
 ```
 
-You’ll find generated pages under `_site/docs/category/...` — one folder per unique `category` value.  
-If you specify `paginate`, the plugin will also create additional pages (`page2.html`, etc.) with navigation links.
+You’ll find generated pages under `_site/docs/category/<slug>/index.html` — one folder per unique `category` value.  
+If you specify `paginate`, the plugin creates additional pages that follow the template (e.g. `/docs/category/getting-started/page2/`) and exposes previous/next links via `page.paginator`.
 
 
 ## Generated Data Reference
@@ -66,9 +66,10 @@ site.data.collection_pages[collection][field]
 
 Each entry includes:
 
-- `field`, `path`, `permalink`
+- `template` → the full sanitized template used for creating pages with placeholders intact.  Directory-style values from `_config.yml` are auto-appended with `:field/page:num/index.html`. (e.g. `/docs/category/:field/page:num/index.html`)
+- `permalink` → the sanitized template for the index with placeholders intact (e.g. `/docs/category/:field/`)
 - `pages` → documents grouped by label (`{ label => [documents...] }`)
-- `labels` → metadata for the generated index pages
+- `labels`: metadata describing the generated index pages
 
 ### pages
 
@@ -94,27 +95,25 @@ Groups documents by label:
 
 Provides metadata for each generated index:
 
-- `page`: first generated index page (`index.html`)
+- `index`: first generated index page (`index.html`)
 - `pages`: all generated index pages (if paginated)
-- `path`: base output path
-- `layout`: layout basename
-- `paginate`: configured per-page value (or `nil`)
 
 Example:
 
 ```liquid
 {% raw %}
-{% assign info = site.data.collection_pages.docs.category %}
-{% for entry in info.pages %}
+## Index of generated pages
+{%- assign index_by_label = site.data.collection_pages.docs.category.labels %}
+
+{% for entry in index_by_label %}
   {% assign label = entry | first %}
-  {% assign documents = entry | last %}
-  {% assign meta = info.labels[label] %}
-  <h2>{{ label }} ({{ documents.size }})</h2>
-  <p>Permalink template: {{ info.permalink }}</p>
-  <a href="{{ meta.page.url | relative_url }}">View all</a>
-  {% if meta.paginate %}
-    <small>Paginated ({{ meta.paginate }} per page)</small>
-  {% endif %}
+  {% assign info = entry | last %}
+  <h2> <a href="{{ info.index.url | relative_url }}">{{ label }}</a> ( {{ info.pages.size }})</h2>
+  <ul>
+  {% for entry in info.pages %}
+    <li><a href="{{ entry.url }}">Page {{ entry.page_num }}</a></li>
+  {% endfor %}
+  </ul>
 {% endfor %}
 {% endraw %}
 ```

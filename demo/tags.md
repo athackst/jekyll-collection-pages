@@ -10,6 +10,6 @@ permalink: /tags/
 {% include post-index.html
   collection=tags_info.pages
   collection_permalink=tag_permalink
-  replace_value=":tags"
+  replace_value=":field"
   per_section=3
 %}

@@ -65,19 +65,19 @@ Now, let's configure the Jekyll Collection Pages plugin to work with our structu
 ```yaml
 collection_pages:
   - collection: getting_started
-    tag_field: category
+    field: category
     path: docs/getting-started/categories
     layout: category_page.html
   - collection: user_guide
-    tag_field: category
+    field: category
     path: docs/user-guide/categories
     layout: category_page.html
   - collection: api_reference
-    tag_field: category
+    field: category
     path: docs/api/categories
     layout: category_page.html
   - collection: troubleshooting
-    tag_field: category
+    field: category
     path: docs/troubleshooting/categories
     layout: category_page.html
 ```
@@ -108,7 +108,7 @@ category: Setup
 Here's how to install the software...
 ```
 
-The `jekyll-collection-pages` plugin will automatically create a category page at `/docs/getting-started/categories/setup.html` listing all documents in the "Setup" category.
+The `jekyll-collection-pages` plugin will automatically create a category page at `/docs/getting-started/categories/setup/index.html` listing all documents in the "Setup" category.
 
 ## Implementing Effective Search
 

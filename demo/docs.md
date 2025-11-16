@@ -11,7 +11,7 @@ permalink: /docs/
   {% assign label = category | first %}
   {% assign documents = category | last | sort: "order" %}
   {% assign info = docs_info.labels[label] %}
-  <h3><a href="{{ info.page.url | relative_url }}">{{ label | default: "Uncategorized" }}</a></h3>
+  <h3><a href="{{ info.index.url | relative_url }}">{{ label | default: "Uncategorized" }}</a></h3>
   <ul>
   {% for entry in documents %}
     <li><a href="{{ entry.url }}">{{ entry.title }}</a>

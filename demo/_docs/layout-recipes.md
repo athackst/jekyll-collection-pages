@@ -57,7 +57,7 @@ layout: default
   <div class="category-summary">
     <h2>{{ label }}</h2>
     <p>{{ documents.size }} docs</p>
-    <a href="{{ meta.page.url | relative_url }}">View all</a>
+    <a href="{{ meta.index.url | relative_url }}">View all</a>
   </div>
 {% endfor %}
 {% endraw %}
@@ -71,8 +71,8 @@ If you already have a `post-index.html` include that expects `site.tags`-style i
 {% raw %}
 {% include post-index.html
    collection=site.data.collection_pages.articles.tags.pages
-   collection_permalink="/articles/tags/:tag"
-   replace_value=":tag"
+   collection_permalink=site.data.collection_pages.articles.tags.permalink
+   replace_value=":field"
    meta=site.data.collection_pages.articles.tags.labels %}
 {% endraw %}
 ```
@@ -110,7 +110,7 @@ When you maintain per-language collections, add a language code to your layouts:
 {% assign fr_info = site.data.collection_pages.docs_fr.category %}
 {% assign fr_page = fr_info.labels[page.tag] %}
 {% if fr_page %}
-  <link rel="alternate" hreflang="fr" href="{{ fr_page.page.url | relative_url }}">
+  <link rel="alternate" hreflang="fr" href="{{ fr_page.index.url | relative_url }}">
 {% endif %}
 {% endraw %}
 ```

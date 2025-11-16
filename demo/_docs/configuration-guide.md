@@ -44,6 +44,8 @@ collection_pages:
 
 If you only need a single entry, `collection_pages` can also be a hash (the plugin normalises it internally). The array form keeps things consistent once you add more targets.
 
+Each `path` above is treated as a template—directory values automatically expand to `docs/<section>/categories/:field/page:num/index.html`. To switch to file-style permalinks, include the placeholders yourself, e.g. `docs/getting-started/categories/:field-page:num.html`.
+
 ## Configuration options
 
 ### `collection`
@@ -64,7 +66,13 @@ Make sure every document you expect to index sets this field. When the field hol
 
 - Type: `String`  
 - Required: ✔  
-- Description: Destination directory (relative to the site source). Each unique field value is rendered under this path, e.g. `docs/category/getting-started/index.html`.
+- Description: Path template relative to the site source. It must contain exactly one `:field` placeholder (replaced with the slugified field value) and one `:num` placeholder (replaced with the page number). When you omit placeholders in a directory-style path, the plugin automatically appends them as `<path>/:field/page:num/index.html`. When you provide a filename (ends in `.html`/`.htm`), you must include both placeholders yourself. Leading/trailing slashes are stripped either way.
+
+Rules enforced by the generator:
+
+- `:field` must appear before `:num`, and they cannot be in the same path segment.
+- Paths ending in `.html`/`.htm` must include both placeholders already.
+- Leaving `path` blank defaults to `<collection>/:field/page:num/index.html`.
 
 ### `layout`
 
@@ -78,19 +86,20 @@ The plugin copies `page.posts`, `page.tag`, and optional `page.paginator` into t
 
 - Type: `Integer`  
 - Required: ✖  
-- Description: When present, splits the documents into pages of the given size. Pagination behaves like Jekyll’s built-in paginator (`page.paginator` exposes `page`, `total_pages`, `previous_page_path`, `next_page_path`, etc.) and the generated paths already include the tag directory (e.g. `docs/category/getting-started/`, `docs/category/getting-started/page2.html`), so piping them through `relative_url` yields working links.
+- Description: When present and positive, splits the documents into pages of the given size. Pagination behaves like Jekyll’s built-in paginator (`page.paginator` exposes `page`, `total_pages`, `previous_page_path`, `next_page_path`, etc.) and the generated paths already include the tag directory (e.g. `docs/category/getting-started/`, `docs/category/getting-started/page2.html`), so piping them through `relative_url` yields working links.
 
-Omit this key for single-page listings.
+Set `paginate` to `nil`, omit the key, or use a non-positive number to render a single page per label. Non-numeric values raise an error during the build, so typos like `"ten"` fail fast.
 
 ## Generated data
 
 At build time the plugin exports `site.data.collection_pages[collection_name][field]`, which contains:
 
-- `field`, `path`, `permalink` (`"#{path}/:#{field}"`)
-- `pages` → `{ label => [documents...] }` (same shape as `site.tags`)
-- `labels` → `{ label => { 'page', 'pages', 'path', 'layout', 'paginate' } }`
+- `template` → the full sanitized template used for creating pages with placeholders intact.  Directory-style values from `_config.yml` are auto-appended with `:field/page:num/index.html`. (e.g. `/docs/category/:field/page:num/index.html`)
+- `permalink` → the sanitized template for the index with placeholders intact (e.g. `/docs/category/:field/`)
+- `pages` → documents grouped by label (`{ label => [documents...] }`)
+- `labels`: metadata describing the generated index pages
 
-Use `pages` to feed existing includes, and `labels[label].page.url` when you need the generated index URL.
+Use `pages` to feed existing includes, and `labels[label].index.url` when you need the generated index URL.
 
 See the [Generated data reference](generated-data.md) for usage patterns and Liquid snippets.
 

@@ -5,7 +5,7 @@ Thank you for your interest in contributing to jekyll-collection-pages! We welco
 ## Getting Started
 
 1. Fork the repository on GitHub.
-2. Clone your fork locally: `git clone https://github.com/athackston/jekyll-collection-pages.git`
+2. Clone your fork locally: `git clone https://github.com/PrimerPages/jekyll-collection-pages.git`
 3. Create a new branch for your feature or bug fix: `git checkout -b feature/your-feature-name` or `git checkout -b fix/your-bug-fix`
 
 ## Making Changes

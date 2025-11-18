@@ -58,6 +58,6 @@ Ready to use `jekyll-collection-pages` in your own project?
 
 ## Community and Support
 
-- [GitHub Repository](https://github.com/athackst/jekyll-collection-pages)
-- [Report an Issue](https://github.com/athackst/jekyll-collection-pages/issues)
+- [GitHub Repository](https://github.com/PrimerPages/jekyll-collection-pages)
+- [Report an Issue](https://github.com/PrimerPages/jekyll-collection-pages/issues)
 - [Contribution Guidelines](contributing.md)

@@ -7,11 +7,12 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'A Jekyll plugin for generating tag pages for multiple collections'
   spec.description   = 'This Jekyll plugin allows you to generate tag pages for multiple collections, with support for pagination.'
-  spec.homepage      = 'https://github.com/athackst/jekyll-collection-pages'
+  spec.homepage      = 'https://github.com/PrimerPages/jekyll-collection-pages'
   spec.license       = 'MIT'
   spec.metadata       = {
     'source_code_uri' => spec.homepage,
     'bug_tracker_uri' => "#{spec.homepage}/issues",
+    'documentation_uri' => 'https://primerpages.github.io/jekyll-collection-pages/',
     'rubygems_mfa_required' => 'true'
   }
   spec.required_ruby_version = Gem::Requirement.new('>= 2.7.0')

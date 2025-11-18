@@ -1,8 +1,8 @@
 theme: jekyll-theme-profile
 style: topbar
 title: Jekyll Collection Pages plugin
-repository: athackst/jekyll-collection-pages
-author: Allison Thackston
+repository: PrimerPages/jekyll-collection-pages
+author: PrimerPages
 description: "A plugin for creating index pages for a collection."
 image: /assets/img/jekyll-collection-pages-preview.png
 
@@ -11,19 +11,6 @@ repo_info: false
 user_metadata: false
 user_image: /assets/img/jekyll-collection-pages.png
 profile_link: false
-
-social_media:
-  linkedin: allisonthackston
-  x: althack
-  github: athackst
-
-twitter:
-  username: althack
-  card: summary_large_image
-
-analytics:
-  provider: google
-  property: G-Y6XF7V2K0V
 
 collections:
   docs:

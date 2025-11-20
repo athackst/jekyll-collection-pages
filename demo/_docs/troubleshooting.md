@@ -41,8 +41,8 @@ Having trouble seeing generated pages or data? Start here.
 
 ## Path template errors
 
-- `path` values must resolve to exactly one `:field` placeholder and one `:num` placeholder. Directory-style paths (no `.html`/`.htm`) automatically become `<path>/:field/page:num/index.html`, but explicit filenames must include both placeholders.
-- `:field` must appear before `:num`, and they cannot live in the same path segment.
+- `path` values must resolve to exactly one `:field` placeholder. Add a single `:num` placeholder only when the configuration sets a positive `paginate` value. Directory-style paths (no `.html`/`.htm`) automatically become `<path>/:field/index.html`, but  Explicit filenames must include the required placeholders.
+- Whenever `:num` is present it must appear after `:field`, and they cannot live in the same path segment.
 - When the build fails with an error referencing these placeholders, trim any trailing slashes and adjust the order. The generator logs the sanitized template in debug mode so you can confirm the final value.
 
 ## Liquid include expects `site.tags`

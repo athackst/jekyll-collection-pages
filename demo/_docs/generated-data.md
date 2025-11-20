@@ -45,7 +45,7 @@ The structure is intentionally compatible with existing theme includes that expe
 `labels` exposes metadata about each generated index:
 
 - `index`: the first generated index page (`index.html`)
-- `pages`: array of all `TagIndexPage` objects
+- `pages`: array of all generated `TagPage` objects
 
 Example:
 

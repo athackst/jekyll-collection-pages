@@ -91,8 +91,8 @@ layout: default
 
 Every build populates a hash at `site.data.collection_pages[collection][field]` that contains:
 
-- `template` → the full sanitized template used for creating pages with placeholders intact.  Directory-style values from `_config.yml` are auto-appended with `:field/page:num/index.html`. (e.g. `/docs/category/:field/page:num/index.html`)
-- `permalink` → the sanitized template for the index with placeholders intact (e.g. `/docs/category/:field/`)
+- `template` → the sanitized template the generator used (`/docs/category/:field/index.html` for unpaginated configs, `/docs/category/:field/page:num/index.html` when `paginate` is positive).
+- `permalink` → the sanitized template for the index with placeholders intact (`:num` never appears here because it always points to page 1, e.g. `/docs/category/:field/`)
 - `pages` → documents grouped by label (`{ label => [documents...] }`)
 - `labels`: metadata describing the generated index pages
 

@@ -44,7 +44,7 @@ collection_pages:
 
 If you only need a single entry, `collection_pages` can also be a hash (the plugin normalises it internally). The array form keeps things consistent once you add more targets.
 
-Each `path` above is treated as a template—directory values automatically expand to `docs/<section>/categories/:field/page:num/index.html`. To switch to file-style permalinks, include the placeholders yourself, e.g. `docs/getting-started/categories/:field-page:num.html`.
+Each `path` above is treated as a template—directory and can take `:field` and `:num` as placeholders.  It is recommended to set only set the directory since values automatically expand to `<path>/:field/page:num/index.html`.  The first page, and when pagination is off the generator will create pages in `<path>/:field/index.html`.
 
 ## Configuration options
 
@@ -66,13 +66,15 @@ Make sure every document you expect to index sets this field. When the field hol
 
 - Type: `String`  
 - Required: ✔  
-- Description: Path template relative to the site source. It must contain exactly one `:field` placeholder (replaced with the slugified field value) and one `:num` placeholder (replaced with the page number). When you omit placeholders in a directory-style path, the plugin automatically appends them as `<path>/:field/page:num/index.html`. When you provide a filename (ends in `.html`/`.htm`), you must include both placeholders yourself. Leading/trailing slashes are stripped either way.
+- Description: Path template relative to the site source. It can also include a `:field` and a `:num` placeholder which are appended to the path if they are ommitted `:field/page:num/index.html` (recommended).
+    - `:field`: This placeholder is for the value of the field for the page.
+    - `:num`: This placeholder is for the page number of the pagination.
 
 Rules enforced by the generator:
 
-- `:field` must appear before `:num`, and they cannot be in the same path segment.
-- Paths ending in `.html`/`.htm` must include both placeholders already.
-- Leaving `path` blank defaults to `<collection>/:field/page:num/index.html`.
+- When `:num` is present it must appear after `:field`, and the two placeholders cannot live in the same segment.
+- Paths ending in `.html`/`.htm` must include the required placeholders explicitly.
+- Leaving `path` blank defaults to `<collection>/:field/index.html` (or `<collection>/:field/page:num/index.html` when paginated).
 
 ### `layout`
 
@@ -94,8 +96,8 @@ Set `paginate` to `nil`, omit the key, or use a non-positive number to render a 
 
 At build time the plugin exports `site.data.collection_pages[collection_name][field]`, which contains:
 
-- `template` → the full sanitized template used for creating pages with placeholders intact.  Directory-style values from `_config.yml` are auto-appended with `:field/page:num/index.html`. (e.g. `/docs/category/:field/page:num/index.html`)
-- `permalink` → the sanitized template for the index with placeholders intact (e.g. `/docs/category/:field/`)
+- `template` → the sanitized template used to create each index. Directory values inherit `<path>/:field/index.html` and add `/page:num/` only when pagination is enabled (e.g. `/docs/category/:field/index.html` or `/docs/category/:field/page:num/index.html`).
+- `permalink` → the sanitized template for the index with placeholders intact (no `:num`, since it always points to page one, e.g. `/docs/category/:field/`)
 - `pages` → documents grouped by label (`{ label => [documents...] }`)
 - `labels`: metadata describing the generated index pages
 

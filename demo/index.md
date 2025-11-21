@@ -28,7 +28,7 @@ See how `jekyll-collection-pages` organizes technical documentation:
 
 See how `jekyll-collection-pages` can organize collections like posts:
 
-- [Tag directory](directory.md)
+- [Generated pages directory](directory.md)
 - [Tag index](tags.md)
 - [Tag gallery](gallery.md)
 
@@ -52,7 +52,7 @@ Ready to use `jekyll-collection-pages` in your own project?
   {%- include post-card.html border="border-top" %}
   {%- endif %}
 {% endfor %}
-</div>>
+</div>
 
 
 

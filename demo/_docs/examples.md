@@ -16,14 +16,9 @@ collection_pages:
     path: blog/category
     layout: category_page.html
     paginate: 10
-  - collection: posts
-    field: category
-    path: blog/category/:field-page:num.html
-    layout: category_page.html
-    paginate: 10
 ```
 
-The first entry produces folder-style pagination such as `/blog/category/reference/` and `/blog/category/reference/page2/`. The second entry demonstrates file-style pagination (e.g. `/blog/category/reference.html`, `/blog/category/reference-page2.html`). Both obey the same placeholder rules; pick the style that fits your permalink scheme.
+This configuration uses folder-style pagination such as `/blog/category/reference/` and `/blog/category/reference/page2/`. Stick with this pattern for the most compatible URLs.
 
 Render a category listing with the exported data registry:
 

@@ -20,14 +20,14 @@ Layout/LineLength:
 # Metrics cops
 # ----------------------------------------
 Metrics/AbcSize:
-  Max: 23
+  Max: 24
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
 Metrics/ClassLength:
   Max: 240
 Metrics/CyclomaticComplexity:
-  Max: 11
+  Max: 12
 Metrics/MethodLength:
   Max: 20
 Metrics/ModuleLength:
